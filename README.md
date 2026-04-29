@@ -6,21 +6,21 @@ Interim deployment target: `meetup.lyhrealtor.com` for showcase purposes.
 
 ## What this is
 
-- Map-based discovery of bitcoin meetups (interactive, pin-per-meetup)
-- Searchable and filterable list view
-- Individual meetup pages with full detail and schema.org structured data
-- State hub pages for SEO (`/state/virginia`, `/state/texas`, etc.)
+- Map-based discovery of bitcoin meetups (interactive, pin-per-meetup, real US state geometry)
+- Searchable and filterable directory with state, city, and meetup-level pages
+- SEO-friendly hierarchical URLs: `/[state]`, `/[state]/[city]`, `/[state]/[city]/[slug]`
+- Per-meetup detail pages with schema.org structured data
 - Organizer submission form that saves to a local JSON file
-- Dark theme with Bitcoin Is Better branding (navy + orange)
+- Dark theme: warm-tinted near-black background with bitcoin orange accents, Geist + Geist Mono typography
 
 ## Tech stack
 
-- Next.js 15 (App Router)
-- React 19
+- Next.js 15 (App Router) + React 19
 - TypeScript
-- Tailwind CSS
-- Leaflet + OpenStreetMap for the map
-- Static JSON for data (will migrate to Postgres when submissions go live)
+- Custom CSS design system (CSS custom properties + semantic class names) in `app/globals.css`
+- Tailwind CSS for layout utilities only (`flex`, `grid`, spacing, sizing). Color and typography come from CSS variables and the named class system, not Tailwind color utilities.
+- `d3-geo` + `topojson-client` for the SVG US map (Albers USA projection, fed by `us-atlas` topojson loaded at runtime)
+- Static TypeScript module for data (will migrate to Postgres when submissions go live)
 
 ## Running locally
 
@@ -35,33 +35,64 @@ Opens at `http://localhost:3000`.
 
 ```
 app/
-├── page.tsx                  # Main directory: map, search, filter, list
-├── layout.tsx                # Root layout with nav and footer
-├── globals.css               # Dark theme + Leaflet overrides
-├── not-found.tsx             # 404
-├── meetups/[slug]/page.tsx   # Individual meetup detail pages
-├── state/[state]/page.tsx    # State hub pages (SEO)
-├── submit/page.tsx           # Submission form
-└── api/submit/route.ts       # POST endpoint for submissions
+├── page.tsx                              # Home: hero, map, index directory, drawer
+├── layout.tsx                            # Root layout with SiteNav + SiteFooter
+├── globals.css                           # Design tokens + every component class
+├── not-found.tsx                         # 404 (.empty card)
+├── submit/page.tsx                       # Submission form
+├── api/submit/route.ts                   # POST endpoint for submissions
+├── [state]/page.tsx                      # State hub
+├── [state]/[city]/page.tsx               # City hub
+└── [state]/[city]/[slug]/page.tsx        # Individual meetup detail
 
 components/
 ├── SiteNav.tsx
 ├── SiteFooter.tsx
-├── MeetupMap.tsx             # Leaflet map (client component)
-├── MeetupMapWrapper.tsx      # SSR-safe dynamic import wrapper
-└── MeetupCard.tsx
+├── MeetupMap.tsx                         # SVG map (d3-geo + topojson)
+├── MeetupMapWrapper.tsx                  # SSR-safe dynamic import wrapper
+├── IndexDirectory.tsx                    # Two-column address-book directory (home page)
+└── MeetupDrawer.tsx                      # Slide-in detail panel (home page)
 
 data/
-├── meetups.ts                # 50 seed meetups + helper functions
-└── submissions.json          # Created on first submission (gitignored)
+├── meetups.ts                            # 55 seed meetups + slug/lookup helpers
+└── submissions.json                      # Created on first submission (gitignored)
 
 lib/
-└── types.ts                  # Meetup and State types
+└── types.ts                              # Meetup and State types
 ```
+
+## URL structure
+
+```
+/                                  Home directory (search, filter, map, address book)
+/[state]                           State hub  (e.g. /virginia)
+/[state]/[city]                    City hub   (e.g. /virginia/lynchburg)
+/[state]/[city]/[slug]             Meetup     (e.g. /virginia/lynchburg/lynchburg-bitcoiners)
+/submit                            Submission form
+/submit?update=[slug]              Update a listing
+/api/submit                        POST endpoint
+```
+
+City slugs strip periods so `St. Louis` becomes `st-louis`. Slug helpers live in `data/meetups.ts` (`stateSlug`, `citySlug`, `getMeetupByPath`, `getCitiesInState`, `getMeetupsByCityInState`).
+
+## Design system
+
+`app/globals.css` is the single source of truth for visual style. Key pieces:
+
+- **Color tokens:** `--orange`, `--orange-soft`, `--orange-line`, `--bg`, `--bg-elev`, `--bg-elev-2`, `--line`, `--line-strong`, `--text`, `--text-mute`, `--text-dim`, `--green`, `--red`
+- **Typography:** Geist (body) + Geist Mono (`.mono`, `.eyebrow`, monospace accents)
+- **Layout:** `.section` (max-width 1400, padded), `.hero-titlebar`, `.stat-strip`
+- **Directory rows:** `.drow` family. `.drow-no-city` modifier hides the city column for hubs where city is implicit.
+- **Drawer / detail:** `.drawer-hero`, `.drawer-eyebrow`, `.drawer-name`, `.drawer-loc`, `.drawer-body`, `.drawer-row` (with `.k` label), `.drawer-actions`. Reused on the meetup detail page in a centered max-width layout.
+- **CTAs:** `.cta-strip` (orange), `.btn` / `.btn-primary` / `.btn-ghost`
+- **Forms:** `.field`, `.field-check`, `.divider`, `.alert-error`
+- **Cards:** `.info-card` family
+- **Empty/404:** `.empty`, `.empty-mark` (dashed-ringed orange circle)
+- **Misc:** `.chip`, `.freq-dot`, `.eyebrow`, `.tail` (back-link footer)
 
 ## IMPORTANT: Data verification before launch
 
-The seed data in `data/meetups.ts` contains 50 meetups. **49 of them are marked `needsVerification: true`** — they were populated from general knowledge and public indicators, but you MUST personally verify each one before public launch. Check:
+The seed data in `data/meetups.ts` contains 55 meetups. **54 of them are marked `needsVerification: true`** — they were populated from general knowledge and public indicators, but you MUST personally verify each one before public launch. Check:
 
 1. Does this meetup actually exist and still meet?
 2. Is the city, coordinates, and cadence correct?
@@ -81,7 +112,7 @@ Unverified meetups display a "Listing unverified" badge on their detail page so 
 
 Things not yet built, in recommended priority order:
 
-1. **Verify the seed data.** Go through all 49 unverified meetups. Remove dead ones, correct bad info, confirm with real sources.
+1. **Verify the seed data.** Go through all 54 unverified meetups. Remove dead ones, correct bad info, confirm with real sources.
 2. **Add more meetups.** Target 150-300 for a credible public launch. The AI-assisted city sweep approach is documented in the BIB proposal PDF.
 3. **Email submission notifications.** The `/api/submit` route currently only writes to a JSON file. Wire it to send an email to Mason when a new submission arrives (SendGrid, Resend, or Sender.net).
 4. **Postgres migration.** Replace `data/submissions.json` with a real database on Railway once submission volume grows.
@@ -99,9 +130,9 @@ Then review the diagnosis and give Carlo the exact fix.
 
 ## Branding notes
 
-- Agent branding: "Bitcoin Is Better" only. Do NOT add "LYH Realtor" labels anywhere.
+- Site branding: "Bitcoin Is Better" only. Do NOT add "LYH Realtor" labels anywhere.
 - Primary accent: `#F7931A` (bitcoin orange)
-- Dark bg: `#0A0E1A`
+- Page background: `#0A0908` (warm near-black, set via `--bg`)
 - No em dashes in copy (site-wide rule)
 
 ## License

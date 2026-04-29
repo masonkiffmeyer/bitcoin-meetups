@@ -1,6 +1,12 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { meetups, getMeetupByPath, stateSlug, citySlug } from "@/data/meetups";
+import {
+  meetups,
+  getMeetupByPath,
+  getFreq,
+  stateSlug,
+  citySlug,
+} from "@/data/meetups";
 import type { Metadata } from "next";
 
 type Props = { params: Promise<{ state: string; city: string; slug: string }> };
@@ -28,6 +34,9 @@ export default async function MeetupDetailPage({ params }: Props) {
   const meetup = getMeetupByPath(state, city, slug);
   if (!meetup) notFound();
 
+  // schema.org Organization is the most accurate type for a recurring community
+  // group. Event would require per-instance startDate which we don't track yet;
+  // EventSeries has the same gap. Revisit when calendar data lands.
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "Organization",
@@ -51,161 +60,149 @@ export default async function MeetupDetailPage({ params }: Props) {
     },
   };
 
+  const hasContacts = !!(
+    meetup.website ||
+    meetup.twitter ||
+    meetup.nostr ||
+    meetup.telegram ||
+    meetup.meetupUrl
+  );
+
   return (
-    <div className="max-w-4xl mx-auto px-6 py-8">
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-      />
+    <section className="section">
+      <div className="max-w-2xl mx-auto">
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
 
-      <nav className="text-xs text-ink-muted mb-6 flex items-center gap-2">
-        <Link href="/" className="hover:text-bitcoin-orange">
-          All meetups
-        </Link>
-        <span>›</span>
-        <Link href={`/${state}`} className="hover:text-bitcoin-orange">
-          {meetup.state}
-        </Link>
-        <span>›</span>
-        <Link href={`/${state}/${city}`} className="hover:text-bitcoin-orange">
-          {meetup.city}
-        </Link>
-        <span>›</span>
-        <span className="text-ink-secondary">{meetup.name}</span>
-      </nav>
-
-      <header className="mb-8">
-        <div className="text-bitcoin-orange text-sm mb-2">
-          {meetup.city}, {meetup.state}
+        <div className="eyebrow mb-6">
+          <Link href="/">All meetups</Link> ·{" "}
+          <Link href={`/${state}`}>{meetup.state}</Link> ·{" "}
+          <Link href={`/${state}/${city}`}>{meetup.city}</Link> · {meetup.name}
         </div>
-        <h1 className="text-4xl text-white font-medium tracking-tight mb-3">{meetup.name}</h1>
-        <div className="flex flex-wrap gap-2">
-          {meetup.beginnerFriendly ? (
-            <span className="text-xs px-3 py-1 rounded-full bg-green-500/15 text-green-400">
-              Beginner friendly
+
+        <div className="drawer-hero">
+          <div className="drawer-eyebrow">
+            <span className={`freq-dot freq-${getFreq(meetup)}`}>
+              <span className="freq-dot-inner" />
+              {getFreq(meetup) === "weekly" ? "Weekly" : "Monthly"}
             </span>
-          ) : (
-            <span className="text-xs px-3 py-1 rounded-full bg-blue-500/15 text-blue-300">
-              Technical focus
-            </span>
-          )}
-          {meetup.tags?.map((t) => (
-            <span key={t} className="text-xs px-3 py-1 rounded-full bg-bg-elevated text-ink-secondary">
-              {t}
-            </span>
-          ))}
-          {meetup.needsVerification && (
-            <span className="text-xs px-3 py-1 rounded-full bg-amber-500/15 text-amber-400">
-              Listing unverified
-            </span>
-          )}
-        </div>
-      </header>
-
-      <section className="mb-8">
-        <p className="text-ink-secondary text-base leading-relaxed">{meetup.description}</p>
-      </section>
-
-      <section className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-        <div className="rounded-lg border border-line-subtle bg-bg-card p-5">
-          <div className="text-ink-muted text-xs tracking-widest mb-1">CADENCE</div>
-          <div className="text-white text-sm">{meetup.cadence}</div>
-        </div>
-        <div className="rounded-lg border border-line-subtle bg-bg-card p-5">
-          <div className="text-ink-muted text-xs tracking-widest mb-1">TYPICAL VENUE</div>
-          <div className="text-white text-sm">{meetup.venue}</div>
-        </div>
-        <div className="rounded-lg border border-line-subtle bg-bg-card p-5">
-          <div className="text-ink-muted text-xs tracking-widest mb-1">ATTENDANCE</div>
-          <div className="text-white text-sm">{meetup.attendance}</div>
-        </div>
-        <div className="rounded-lg border border-line-subtle bg-bg-card p-5">
-          <div className="text-ink-muted text-xs tracking-widest mb-1">LOCATION</div>
-          <div className="text-white text-sm">
-            {meetup.city}, {meetup.stateAbbr}
-          </div>
-        </div>
-      </section>
-
-      {(meetup.website || meetup.twitter || meetup.nostr || meetup.telegram || meetup.meetupUrl) && (
-        <section className="mb-8">
-          <h2 className="text-white font-medium text-base mb-3">Connect with this meetup</h2>
-          <div className="flex flex-wrap gap-3">
-            {meetup.website && (
-              <a
-                href={meetup.website}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="px-4 py-2 rounded border border-line-soft bg-bg-card hover:border-bitcoin-orange text-sm text-white transition-colors"
-              >
-                Website ↗
-              </a>
-            )}
-            {meetup.twitter && (
-              <a
-                href={`https://x.com/${meetup.twitter}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="px-4 py-2 rounded border border-line-soft bg-bg-card hover:border-bitcoin-orange text-sm text-white transition-colors"
-              >
-                @{meetup.twitter} on X ↗
-              </a>
-            )}
-            {meetup.nostr && (
-              <a
-                href={`https://njump.me/${meetup.nostr}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="px-4 py-2 rounded border border-line-soft bg-bg-card hover:border-bitcoin-orange text-sm text-white transition-colors"
-              >
-                Nostr ↗
-              </a>
-            )}
-            {meetup.telegram && (
-              <a
-                href={meetup.telegram}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="px-4 py-2 rounded border border-line-soft bg-bg-card hover:border-bitcoin-orange text-sm text-white transition-colors"
-              >
-                Telegram ↗
-              </a>
-            )}
-            {meetup.meetupUrl && (
-              <a
-                href={meetup.meetupUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="px-4 py-2 rounded border border-line-soft bg-bg-card hover:border-bitcoin-orange text-sm text-white transition-colors"
-              >
-                Meetup.com ↗
-              </a>
+            {meetup.tags?.map((t) => (
+              <span key={t} className="mcard-tag">
+                {t}
+              </span>
+            ))}
+            {meetup.needsVerification && (
+              <span className="mcard-tag">Listing unverified</span>
             )}
           </div>
-        </section>
-      )}
-
-      <section className="rounded-lg border border-line-subtle bg-bg-card p-5 mb-8">
-        <div className="text-white font-medium text-sm mb-1">Organize this meetup?</div>
-        <div className="text-ink-secondary text-xs mb-3">
-          Claim this listing to keep it up to date and add upcoming event details.
+          <h1 className="drawer-name">{meetup.name}</h1>
+          <div className="drawer-loc">
+            {meetup.city}, {meetup.state}
+          </div>
         </div>
-        <Link
-          href={`/submit?update=${meetup.slug}`}
-          className="inline-block text-bitcoin-orange text-sm hover:underline"
-        >
-          Claim or update this listing →
-        </Link>
-      </section>
 
-      <div className="border-t border-line-subtle pt-6">
-        <Link
-          href={`/${state}/${city}`}
-          className="text-ink-muted text-sm hover:text-bitcoin-orange"
-        >
-          ← Back to {meetup.city} meetups
-        </Link>
+        <div className="drawer-body">
+          <div className="drawer-row">
+            <span className="k">Cadence</span>
+            <span>{meetup.cadence}</span>
+          </div>
+          <div className="drawer-row">
+            <span className="k">Venue</span>
+            <span>{meetup.venue}</span>
+          </div>
+          <div className="drawer-row">
+            <span className="k">Attendance</span>
+            <span>{meetup.attendance}</span>
+          </div>
+          <div className="drawer-row">
+            <span className="k">Coordinates</span>
+            <span className="mono">
+              {meetup.lat.toFixed(4)}°N, {Math.abs(meetup.lng).toFixed(4)}°W
+            </span>
+          </div>
+
+          <p>{meetup.description}</p>
+        </div>
+
+        {hasContacts && (
+          <div className="mt-8">
+            <div className="eyebrow mb-3">Connect</div>
+            <div className="flex flex-wrap gap-2">
+              {meetup.website && (
+                <a
+                  className="btn"
+                  href={meetup.website}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Website ↗
+                </a>
+              )}
+              {meetup.twitter && (
+                <a
+                  className="btn"
+                  href={`https://x.com/${meetup.twitter}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  @{meetup.twitter} on X ↗
+                </a>
+              )}
+              {meetup.nostr && (
+                <a
+                  className="btn"
+                  href={`https://njump.me/${meetup.nostr}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Nostr ↗
+                </a>
+              )}
+              {meetup.telegram && (
+                <a
+                  className="btn"
+                  href={meetup.telegram}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Telegram ↗
+                </a>
+              )}
+              {meetup.meetupUrl && (
+                <a
+                  className="btn"
+                  href={meetup.meetupUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Meetup.com ↗
+                </a>
+              )}
+            </div>
+          </div>
+        )}
+
+        <div className="info-card mt-8">
+          <div className="info-card-title">Organize this meetup?</div>
+          <div className="info-card-sub">
+            Claim this listing to keep it up to date and add upcoming event details.
+          </div>
+          <Link
+            href={`/submit?update=${meetup.slug}`}
+            className="info-card-link"
+          >
+            Claim or update this listing →
+          </Link>
+        </div>
+
+        <div className="tail eyebrow">
+          <Link href={`/${state}/${city}`}>
+            ← Back to {meetup.city} meetups
+          </Link>
+        </div>
       </div>
-    </div>
+    </section>
   );
 }

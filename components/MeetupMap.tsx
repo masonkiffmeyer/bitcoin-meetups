@@ -135,7 +135,7 @@ export default function MeetupMap({ meetups, selectedId, onSelect, onOpen }: Pro
         <g fontFamily="'Geist Mono', monospace" fontSize="11" fill="rgba(255,255,255,0.35)">
           <text x="40" y="24">ALBERS USA · NAD83</text>
           <text x={W - 40} y="24" textAnchor="end">N {meetups.length} MEETUPS</text>
-          <text x="40" y={H - 12}>BITCOINISBETTER.ORG</text>
+          <text x="40" y={H - 12}>MEETUPS · 2026</text>
           <text x={W - 40} y={H - 12} textAnchor="end">LIVE · v2026.04</text>
         </g>
 

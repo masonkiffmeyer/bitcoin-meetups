@@ -6,7 +6,7 @@ import {
   getMeetupsByStateSlug,
   citySlug,
 } from "@/data/meetups";
-import MeetupCard from "@/components/MeetupCard";
+import type { Meetup } from "@/lib/types";
 
 type Props = { params: Promise<{ state: string }> };
 
@@ -30,6 +30,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
+function rowLink(m: Meetup): string {
+  if (m.website) return `${m.website.replace(/^https?:\/\//, "")} ↗`;
+  if (m.twitter) return `@${m.twitter} ↗`;
+  return "";
+}
+
 export default async function StatePage({ params }: Props) {
   const { state } = await params;
   const stateMeetups = getMeetupsByStateSlug(state);
@@ -38,104 +44,91 @@ export default async function StatePage({ params }: Props) {
   const stateName = stateMeetups[0].state;
   const stateAbbr = stateMeetups[0].stateAbbr;
 
-  const byCity = new Map<string, typeof stateMeetups>();
+  const byCity = new Map<string, Meetup[]>();
   for (const m of stateMeetups) {
-    const existing = byCity.get(m.city) || [];
-    existing.push(m);
-    byCity.set(m.city, existing);
+    const list = byCity.get(m.city) || [];
+    list.push(m);
+    byCity.set(m.city, list);
   }
   const cities = Array.from(byCity.keys()).sort();
 
-  const beginnerFriendly = stateMeetups.filter((m) => m.beginnerFriendly).length;
-
   return (
-    <div className="max-w-5xl mx-auto px-6 py-8">
-      <nav className="text-xs text-ink-muted mb-6 flex items-center gap-2">
-        <Link href="/" className="hover:text-bitcoin-orange">
-          All meetups
-        </Link>
-        <span>›</span>
-        <span className="text-ink-secondary">{stateName}</span>
-      </nav>
+    <section className="section">
+      <div className="eyebrow mb-6">
+        <Link href="/">All meetups</Link> · {stateName}
+      </div>
 
-      <header className="mb-8">
-        <h1 className="text-4xl text-white font-medium tracking-tight mb-3">
-          Bitcoin Meetups in {stateName}
-        </h1>
-        <p className="text-ink-secondary text-base max-w-2xl leading-relaxed">
-          {stateMeetups.length} active bitcoin {stateMeetups.length === 1 ? "meetup" : "meetups"}{" "}
-          listed across {cities.length} {cities.length === 1 ? "city" : "cities"} in {stateName}.
-          {beginnerFriendly > 0 && ` ${beginnerFriendly} beginner-friendly.`}
-        </p>
-      </header>
+      <h1 className="hero-title">
+        Bitcoin Meetups in <em>{stateName}</em>
+      </h1>
+      <p className="hero-sub">
+        {stateMeetups.length} active bitcoin{" "}
+        {stateMeetups.length === 1 ? "meetup" : "meetups"} listed across {cities.length}{" "}
+        {cities.length === 1 ? "city" : "cities"} in {stateName}.
+      </p>
 
-      <section className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-10">
-        <div className="rounded-lg border border-line-subtle bg-bg-card p-4">
-          <div className="text-ink-muted text-xs tracking-widest mb-1">MEETUPS</div>
-          <div className="text-2xl text-white font-medium">{stateMeetups.length}</div>
+      <div className="stat-strip mt-12 mb-12">
+        <div className="stat-strip-cell">
+          <span className="stat-strip-num">{stateMeetups.length}</span>
+          <span className="stat-strip-label">Meetups</span>
         </div>
-        <div className="rounded-lg border border-line-subtle bg-bg-card p-4">
-          <div className="text-ink-muted text-xs tracking-widest mb-1">CITIES</div>
-          <div className="text-2xl text-white font-medium">{cities.length}</div>
+        <div className="stat-strip-cell">
+          <span className="stat-strip-num">{cities.length}</span>
+          <span className="stat-strip-label">Cities</span>
         </div>
-        <div className="rounded-lg border border-line-subtle bg-bg-card p-4">
-          <div className="text-ink-muted text-xs tracking-widest mb-1">BEGINNER FRIENDLY</div>
-          <div className="text-2xl text-white font-medium">{beginnerFriendly}</div>
+        <div className="stat-strip-cell">
+          <span className="stat-strip-num">{stateAbbr}</span>
+          <span className="stat-strip-label">State</span>
         </div>
-        <div className="rounded-lg border border-line-subtle bg-bg-card p-4">
-          <div className="text-ink-muted text-xs tracking-widest mb-1">STATE</div>
-          <div className="text-2xl text-white font-medium">{stateAbbr}</div>
-        </div>
-      </section>
+      </div>
 
-      <section className="mb-12">
+      <div className="mb-12">
         {cities.map((city) => {
-          const cityMeetups = byCity.get(city)!;
+          const list = byCity.get(city)!;
           return (
-            <div key={city} className="mb-8">
-              <h2 className="text-xl text-white font-medium mb-4 border-b border-line-subtle pb-2">
+            <div key={city} className="dir-state-block">
+              <div className="dir-state-label">
                 <Link
                   href={`/${state}/${citySlug(city)}`}
-                  className="hover:text-bitcoin-orange transition-colors"
+                  className="dir-state-name"
                 >
                   {city}
                 </Link>
-                <span className="text-ink-muted text-sm font-normal ml-2">
-                  ({cityMeetups.length} {cityMeetups.length === 1 ? "meetup" : "meetups"})
-                </span>
-              </h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                {cityMeetups.map((m) => (
-                  <MeetupCard key={m.id} meetup={m} />
-                ))}
+                <span className="dir-state-count">{list.length}</span>
               </div>
+              {list.map((m) => (
+                <Link
+                  key={m.id}
+                  href={`/${state}/${citySlug(m.city)}/${m.slug}`}
+                  className="drow drow-no-city"
+                >
+                  <span className="drow-marker" />
+                  <span className="drow-name">{m.name}</span>
+                  <span className="drow-city">{m.city}</span>
+                  <span className="drow-cadence">{m.cadence}</span>
+                  <span className="drow-link">{rowLink(m)}</span>
+                </Link>
+              ))}
             </div>
           );
         })}
-      </section>
+      </div>
 
-      <section className="rounded-lg border border-bitcoin-orange/30 bg-bitcoin-orange/5 p-6 flex flex-wrap items-center justify-between gap-4 mb-8">
+      <div className="cta-strip">
         <div>
-          <div className="text-white font-medium text-base mb-1">
-            Missing a {stateName} meetup?
-          </div>
-          <div className="text-ink-secondary text-sm">
+          <h3 className="cta-title">Missing a {stateName} meetup?</h3>
+          <p className="cta-sub">
             Help us keep this directory complete. Takes less than a minute.
-          </div>
+          </p>
         </div>
-        <Link
-          href="/submit"
-          className="bg-bitcoin-orange text-bg-dark px-5 py-2.5 rounded text-sm font-medium hover:bg-bitcoin-orangeLight transition-colors"
-        >
+        <Link href="/submit" className="btn btn-primary">
           Submit a meetup
         </Link>
-      </section>
-
-      <div className="border-t border-line-subtle pt-6">
-        <Link href="/" className="text-ink-muted text-sm hover:text-bitcoin-orange">
-          ← Back to all meetups
-        </Link>
       </div>
-    </div>
+
+      <div className="tail eyebrow">
+        <Link href="/">← Back to all meetups</Link>
+      </div>
+    </section>
   );
 }

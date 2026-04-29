@@ -23,6 +23,10 @@
 
   --orange-bg: rgba(247,147,26,0.08);
   --orange-cta: var(--orange);
+
+  --red: #EF4444;
+  --red-soft: rgba(239, 68, 68, 0.1);
+  --red-line: rgba(239, 68, 68, 0.3);
 }
 
 * { box-sizing: border-box; }
@@ -594,6 +598,50 @@ a { color: inherit; text-decoration: none; }
   font-weight: 500;
 }
 
+/* No-city variant: collapses .drow-city for hubs where city is implicit */
+.drow.drow-no-city {
+  grid-template-columns: 8px 2fr 1.5fr 140px;
+}
+.drow.drow-no-city .drow-city {
+  display: none;
+}
+
+/* GROUPED-BY-CITY block (state hub) */
+.dir-state-block {
+  margin-top: 32px;
+}
+.dir-state-block:first-of-type {
+  margin-top: 0;
+}
+.dir-state-label {
+  display: grid;
+  grid-template-columns: auto auto 1fr;
+  align-items: center;
+  gap: 12px;
+  padding: 18px 8px 10px;
+  border-bottom: 1px solid var(--line);
+}
+.dir-state-name {
+  font-family: "Geist", sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: var(--text);
+}
+.dir-state-name:hover {
+  color: var(--orange);
+}
+.dir-state-count {
+  font-family: "Geist Mono", monospace;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  color: var(--text-dim);
+  background: var(--bg-elev);
+  padding: 2px 7px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+}
+
 /* INDEX (two-column address book) */
 .dir-index {
   display: grid;
@@ -692,6 +740,9 @@ a { color: inherit; text-decoration: none; }
   .drow {
     grid-template-columns: 8px 1fr 1fr;
     gap: 12px;
+  }
+  .drow.drow-no-city {
+    grid-template-columns: 8px 1fr;
   }
   .drow-cadence, .drow-link { display: none; }
   .drow-head { display: none; }
@@ -887,6 +938,112 @@ a { color: inherit; text-decoration: none; }
 }
 .empty h3 { font-size: 22px; margin: 0 0 8px; font-weight: 500; letter-spacing: -0.01em; }
 .empty p { color: var(--text-mute); margin: 0 auto 24px; max-width: 40ch; }
+
+/* ============ FORMS ============ */
+.field {
+  display: block;
+  width: 100%;
+  background: var(--bg-elev);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 10px 14px;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 14px;
+  transition: border-color 0.15s;
+}
+.field:focus {
+  outline: none;
+  border-color: var(--orange);
+}
+.field::placeholder {
+  color: var(--text-dim);
+}
+textarea.field {
+  resize: vertical;
+  min-height: 96px;
+  line-height: 1.5;
+}
+.field-check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: var(--text-mute);
+  cursor: pointer;
+  user-select: none;
+}
+.field-check input[type="checkbox"] {
+  accent-color: var(--orange);
+  width: 16px;
+  height: 16px;
+}
+.divider {
+  border: 0;
+  border-top: 1px solid var(--line);
+  margin: 32px 0;
+}
+
+/* ============ ALERTS ============ */
+.alert-error {
+  border: 1px solid var(--red-line);
+  background: var(--red-soft);
+  color: var(--red);
+  border-radius: 6px;
+  padding: 12px 16px;
+  font-size: 13px;
+}
+
+/* ============ INFO CARD ============ */
+.info-card {
+  border: 1px solid var(--line);
+  background: var(--bg-elev);
+  border-radius: 6px;
+  padding: 20px;
+}
+.info-card-title {
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 6px;
+}
+.info-card-sub {
+  color: var(--text-mute);
+  font-size: 13px;
+  line-height: 1.5;
+  margin-bottom: 12px;
+}
+.info-card-link {
+  color: var(--orange);
+  font-size: 13px;
+}
+.info-card-link:hover {
+  text-decoration: underline;
+}
+
+/* ============ PAGE TAIL ============ */
+.tail {
+  border-top: 1px solid var(--line);
+  margin-top: 64px;
+  padding-top: 24px;
+}
+
+/* Description paragraph inside drawer body or detail page */
+.drawer-body p {
+  color: var(--text-mute);
+  font-size: 13px;
+  margin-top: 24px;
+  line-height: 1.6;
+}
+
+/* Stat strip nested in .section (sub-page hubs) — drop horizontal padding */
+.section > .stat-strip {
+  padding-left: 0;
+  padding-right: 0;
+}
+
+/* Color helper used sparingly for accents like the 404 eyebrow */
+.is-orange { color: var(--orange); }
 
 /* ============ RESPONSIVE ============ */
 @media (max-width: 900px) {
