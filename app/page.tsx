@@ -206,6 +206,7 @@ export default function HomePage() {
         ) : (
           <IndexDirectory
             meetups={filtered}
+            allMeetups={meetups}
             selectedId={selectedId}
             onSelect={setSelectedId}
             onOpen={setOpenId}
