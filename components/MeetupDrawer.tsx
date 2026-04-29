@@ -38,9 +38,6 @@ export default function MeetupDrawer({ meetup, onClose }: Props) {
                   <span className="freq-dot-inner" />
                   {getFreq(meetup) === "weekly" ? "Weekly" : "Monthly"}
                 </span>
-                {meetup.beginnerFriendly && (
-                  <span className="mcard-tag">Beginner-friendly</span>
-                )}
               </div>
               <h2 className="drawer-name">{meetup.name}</h2>
               <div className="drawer-loc">

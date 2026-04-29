@@ -183,9 +183,6 @@ export default function MeetupMap({ meetups, selectedId, onSelect, onOpen }: Pro
               <span className="freq-dot-inner" />
               {getFreq(popupMeetup) === "weekly" ? "Weekly" : "Monthly"}
             </span>
-            {popupMeetup.beginnerFriendly && (
-              <span className="map-popup-tag">Beginner-friendly</span>
-            )}
           </div>
           <h3 className="map-popup-name">{popupMeetup.name}</h3>
           <div className="map-popup-loc">

@@ -10,7 +10,6 @@ import MeetupDrawer from "@/components/MeetupDrawer";
 export default function HomePage() {
   const [query, setQuery] = useState("");
   const [stateFilter, setStateFilter] = useState("ALL");
-  const [beginnerOnly, setBeginnerOnly] = useState(false);
   const [freqFilter, setFreqFilter] = useState<"ALL" | "weekly" | "monthly">("ALL");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [openId, setOpenId] = useState<string | null>(null);
@@ -34,7 +33,6 @@ export default function HomePage() {
   const filtered = useMemo(() => {
     return meetups.filter((m) => {
       if (stateFilter !== "ALL" && m.stateAbbr !== stateFilter) return false;
-      if (beginnerOnly && !m.beginnerFriendly) return false;
       if (freqFilter !== "ALL" && getFreq(m) !== freqFilter) return false;
       if (query) {
         const q = query.toLowerCase();
@@ -49,7 +47,7 @@ export default function HomePage() {
       }
       return true;
     });
-  }, [query, stateFilter, beginnerOnly, freqFilter]);
+  }, [query, stateFilter, freqFilter]);
 
   const openMeetup = openId ? meetups.find((m) => m.id === openId) ?? null : null;
 
@@ -94,15 +92,6 @@ export default function HomePage() {
                     </option>
                   ))}
                 </select>
-                <div className="hero-search-divider" />
-                <label className="hero-search-toggle">
-                  <input
-                    type="checkbox"
-                    checked={beginnerOnly}
-                    onChange={(e) => setBeginnerOnly(e.target.checked)}
-                  />
-                  Beginner friendly
-                </label>
               </div>
             </div>
           </div>
@@ -189,13 +178,6 @@ export default function HomePage() {
               onClick={() => setFreqFilter("monthly")}
             >
               Monthly <span className="num">{meetups.length - weeklyCount}</span>
-            </button>
-            <button
-              type="button"
-              className={`chip ${beginnerOnly ? "active" : ""}`}
-              onClick={() => setBeginnerOnly(!beginnerOnly)}
-            >
-              Beginner
             </button>
           </div>
         </div>
