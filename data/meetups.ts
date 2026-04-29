@@ -1100,3 +1100,7 @@ export function getAllStatesWithMeetups(): Array<{ name: string; abbr: string; s
     .map((s) => ({ ...s, slug: s.name.toLowerCase().replace(/\s+/g, "-") }))
     .sort((a, b) => a.name.localeCompare(b.name));
 }
+
+export function getFreq(m: Meetup): "weekly" | "monthly" {
+  return /week|multiple events/i.test(m.cadence) ? "weekly" : "monthly";
+}

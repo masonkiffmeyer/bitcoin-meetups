@@ -1,24 +1,44 @@
+import Link from "next/link";
+
 export default function SiteFooter() {
   return (
-    <footer className="border-t border-line-subtle bg-bg-dark mt-16">
-      <div className="max-w-7xl mx-auto px-6 py-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-        <div>
-          <div className="text-white font-medium text-sm tracking-widest mb-2">
+    <footer className="footer">
+      <div className="footer-inner">
+        <div className="footer-brand-block">
+          <div className="footer-brand">
+            <span className="nav-brand-mark">₿</span>
             BITCOIN IS BETTER
           </div>
-          <p className="text-ink-muted text-sm max-w-md leading-relaxed">
+          <p className="footer-desc">
             Helping people discover and understand bitcoin. This meetup directory is
             maintained as a community resource.
           </p>
         </div>
-        <div className="flex gap-6 text-xs text-ink-muted">
-          <a href="https://www.bitcoinisbetter.org" className="hover:text-bitcoin-orange">
-            bitcoinisbetter.org
-          </a>
-          <a href="/submit" className="hover:text-bitcoin-orange">
-            Submit a meetup
-          </a>
+        <div className="footer-col">
+          <h4>Directory</h4>
+          <ul>
+            <li><Link href="/">All meetups</Link></li>
+            <li><Link href="/submit">Submit a meetup</Link></li>
+          </ul>
         </div>
+        <div className="footer-col">
+          <h4>Resources</h4>
+          <ul>
+            <li><a href="https://www.bitcoinisbetter.org/learn">Learn bitcoin</a></li>
+            <li><a href="https://www.bitcoinisbetter.org/partners">Partners</a></li>
+            <li><a href="https://www.bitcoinisbetter.org/about">About</a></li>
+          </ul>
+        </div>
+        <div className="footer-col">
+          <h4>Connect</h4>
+          <ul>
+            <li><a href="https://www.bitcoinisbetter.org">bitcoinisbetter.org</a></li>
+          </ul>
+        </div>
+      </div>
+      <div className="footer-bottom">
+        <span>© 2026 · BITCOINISBETTER.ORG</span>
+        <span>LIVE DIRECTORY · v2026.04</span>
       </div>
     </footer>
   );

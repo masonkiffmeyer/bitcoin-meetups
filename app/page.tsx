@@ -1,192 +1,253 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { meetups, getAllStatesWithMeetups } from "@/data/meetups";
-import MeetupMapWrapper from "@/components/MeetupMapWrapper";
-import MeetupCard from "@/components/MeetupCard";
 import Link from "next/link";
+import { meetups, getFreq } from "@/data/meetups";
+import MeetupMapWrapper from "@/components/MeetupMapWrapper";
+import IndexDirectory from "@/components/IndexDirectory";
+import MeetupDrawer from "@/components/MeetupDrawer";
 
 export default function HomePage() {
   const [query, setQuery] = useState("");
-  const [stateFilter, setStateFilter] = useState<string>("all");
+  const [stateFilter, setStateFilter] = useState("ALL");
   const [beginnerOnly, setBeginnerOnly] = useState(false);
+  const [freqFilter, setFreqFilter] = useState<"ALL" | "weekly" | "monthly">("ALL");
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [openId, setOpenId] = useState<string | null>(null);
 
-  const states = useMemo(() => getAllStatesWithMeetups(), []);
+  const stateGroups = useMemo(() => {
+    const g: Record<string, { name: string; count: number }> = {};
+    for (const m of meetups) {
+      if (!g[m.stateAbbr]) g[m.stateAbbr] = { name: m.state, count: 0 };
+      g[m.stateAbbr].count++;
+    }
+    return Object.entries(g)
+      .map(([code, v]) => ({ code, name: v.name, count: v.count }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+  }, []);
+
+  const weeklyCount = useMemo(
+    () => meetups.filter((m) => getFreq(m) === "weekly").length,
+    []
+  );
 
   const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase();
     return meetups.filter((m) => {
-      if (stateFilter !== "all" && m.stateAbbr !== stateFilter) return false;
+      if (stateFilter !== "ALL" && m.stateAbbr !== stateFilter) return false;
       if (beginnerOnly && !m.beginnerFriendly) return false;
-      if (!q) return true;
-      return (
-        m.name.toLowerCase().includes(q) ||
-        m.city.toLowerCase().includes(q) ||
-        m.state.toLowerCase().includes(q) ||
-        m.stateAbbr.toLowerCase().includes(q)
-      );
+      if (freqFilter !== "ALL" && getFreq(m) !== freqFilter) return false;
+      if (query) {
+        const q = query.toLowerCase();
+        if (
+          !m.name.toLowerCase().includes(q) &&
+          !m.city.toLowerCase().includes(q) &&
+          !m.state.toLowerCase().includes(q) &&
+          !m.stateAbbr.toLowerCase().includes(q)
+        ) {
+          return false;
+        }
+      }
+      return true;
     });
-  }, [query, stateFilter, beginnerOnly]);
+  }, [query, stateFilter, beginnerOnly, freqFilter]);
 
-  const totalMeetups = meetups.length;
-  const statesCount = states.length;
+  const openMeetup = openId ? meetups.find((m) => m.id === openId) ?? null : null;
 
   return (
-    <div className="max-w-7xl mx-auto px-6 py-8">
-      {/* Hero */}
-      <section className="mb-8">
-        <h1 className="text-4xl md:text-5xl text-white font-medium tracking-tight mb-3">
-          Find a Bitcoin Meetup Near You
-        </h1>
-        <p className="text-ink-secondary text-base max-w-2xl mb-6">
-          {totalMeetups} bitcoin meetups across {statesCount} states. Search by city or state, or
-          click a pin on the map to explore.
-        </p>
+    <>
+      <section className="hero">
+        <div className="hero-titlebar">
+          <div className="hero-titlebar-inner">
+            <div className="hero-title-block">
+              <div className="hero-eyebrow">
+                <span className="blink" />
+                <span className="eyebrow">United States · Live directory</span>
+              </div>
+              <h1 className="hero-title">
+                Find your <em>local</em> Bitcoin meetup.
+              </h1>
+              <p className="hero-sub">
+                {meetups.length} meetups across {stateGroups.length} states. Search, filter
+                by cadence, or click any pin on the map below.
+              </p>
+            </div>
 
-        {/* Search and filters */}
-        <div className="flex flex-wrap gap-3 items-center">
-          <input
-            type="text"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search by city, state, or ZIP..."
-            className="flex-1 min-w-[240px] max-w-md bg-bg-card border border-line-soft rounded px-4 py-2.5 text-sm text-white placeholder-ink-dim focus:outline-none focus:border-bitcoin-orange"
-          />
-          <select
-            value={stateFilter}
-            onChange={(e) => setStateFilter(e.target.value)}
-            className="bg-bg-card border border-line-soft rounded px-3 py-2.5 text-sm text-white focus:outline-none focus:border-bitcoin-orange"
-          >
-            <option value="all">All states</option>
-            {states.map((s) => (
-              <option key={s.abbr} value={s.abbr}>
-                {s.name} ({s.count})
-              </option>
-            ))}
-          </select>
-          <label className="flex items-center gap-2 text-sm text-ink-secondary cursor-pointer">
-            <input
-              type="checkbox"
-              checked={beginnerOnly}
-              onChange={(e) => setBeginnerOnly(e.target.checked)}
-              className="w-4 h-4 rounded accent-bitcoin-orange"
+            <div className="hero-search-block">
+              <div className="hero-search">
+                <input
+                  className="hero-search-input"
+                  type="text"
+                  placeholder="Search city, state, or ZIP..."
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                />
+                <div className="hero-search-divider" />
+                <select
+                  className="hero-search-select"
+                  value={stateFilter}
+                  onChange={(e) => setStateFilter(e.target.value)}
+                >
+                  <option value="ALL">All states</option>
+                  {stateGroups.map((s) => (
+                    <option key={s.code} value={s.code}>
+                      {s.name}
+                    </option>
+                  ))}
+                </select>
+                <div className="hero-search-divider" />
+                <label className="hero-search-toggle">
+                  <input
+                    type="checkbox"
+                    checked={beginnerOnly}
+                    onChange={(e) => setBeginnerOnly(e.target.checked)}
+                  />
+                  Beginner friendly
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <div className="stat-strip">
+            <div className="stat-strip-cell">
+              <span className="stat-strip-num">{meetups.length}</span>
+              <span className="stat-strip-label">Meetups listed</span>
+            </div>
+            <div className="stat-strip-cell">
+              <span className="stat-strip-num">{stateGroups.length}</span>
+              <span className="stat-strip-label">States covered</span>
+            </div>
+            <div className="stat-strip-cell">
+              <span className="stat-strip-num">{filtered.length}</span>
+              <span className="stat-strip-label">Matching filters</span>
+            </div>
+            <div className="stat-strip-cell">
+              <span className="stat-strip-num">{weeklyCount}</span>
+              <span className="stat-strip-label">Meet weekly</span>
+            </div>
+            <div className="stat-strip-cell stat-strip-live">
+              <span className="live-dot" />
+              <span className="stat-strip-label">LIVE · v2026.04</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="hero-stage">
+          <div className="hero-map-wrap">
+            <MeetupMapWrapper
+              meetups={filtered}
+              selectedId={selectedId}
+              onSelect={setSelectedId}
+              onOpen={setOpenId}
             />
-            Beginner friendly only
-          </label>
-        </div>
-      </section>
-
-      {/* Map + stats */}
-      <section className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-8">
-        <div className="lg:col-span-2 h-[480px] bg-bg-card border border-line-subtle rounded-lg overflow-hidden">
-          <MeetupMapWrapper
-            meetups={filtered}
-            selectedId={selectedId}
-            onSelect={setSelectedId}
-          />
-        </div>
-        <aside className="bg-bg-card border border-line-subtle rounded-lg p-5">
-          <div className="text-ink-muted text-xs tracking-widest mb-3">AT A GLANCE</div>
-          <div className="space-y-4 mb-6">
-            <div>
-              <div className="text-3xl text-white font-medium">{totalMeetups}</div>
-              <div className="text-ink-secondary text-xs">Total meetups listed</div>
-            </div>
-            <div>
-              <div className="text-3xl text-white font-medium">{statesCount}</div>
-              <div className="text-ink-secondary text-xs">States covered</div>
-            </div>
-            <div>
-              <div className="text-3xl text-white font-medium">{filtered.length}</div>
-              <div className="text-ink-secondary text-xs">Matching your filters</div>
-            </div>
           </div>
-          <div className="pt-4 border-t border-line-subtle">
-            <div className="text-ink-muted text-xs tracking-widest mb-2">LEGEND</div>
-            <div className="flex items-center gap-2 text-xs text-ink-secondary mb-1.5">
-              <div className="w-3 h-3 rounded-full bg-bitcoin-orange border border-white"></div>
+          <div className="map-legend">
+            <span className="legend-item">
+              <span className="legend-dot" />
               Active meetup
-            </div>
-            <div className="flex items-center gap-2 text-xs text-ink-secondary">
-              <div className="w-3 h-3 rounded-full bg-white border-2 border-bitcoin-orange"></div>
+            </span>
+            <span className="legend-item">
+              <span className="legend-dot sel" />
               Selected
-            </div>
+            </span>
+            <span className="legend-item legend-hint">Click a pin for details</span>
           </div>
-        </aside>
+        </div>
       </section>
 
-      {/* Meetup list */}
-      <section className="mb-12">
-        <div className="flex items-baseline justify-between mb-4">
-          <h2 className="text-xl text-white font-medium">
-            {filtered.length === totalMeetups
-              ? "All meetups"
-              : `${filtered.length} ${filtered.length === 1 ? "meetup" : "meetups"}`}
-          </h2>
-          {(query || stateFilter !== "all" || beginnerOnly) && (
+      <section className="section">
+        <div className="section-head">
+          <div>
+            <h2 className="section-title">
+              Directory
+              <span className="count">
+                {String(filtered.length).padStart(2, "0")} /{" "}
+                {String(meetups.length).padStart(2, "0")}
+              </span>
+            </h2>
+            <p className="section-sub">
+              Hover a row to highlight on the map. Click to view details and links.
+            </p>
+          </div>
+          <div className="filter-bar">
             <button
-              onClick={() => {
-                setQuery("");
-                setStateFilter("all");
-                setBeginnerOnly(false);
-              }}
-              className="text-xs text-bitcoin-orange hover:underline"
+              type="button"
+              className={`chip ${freqFilter === "ALL" ? "active" : ""}`}
+              onClick={() => setFreqFilter("ALL")}
             >
-              Clear filters
+              All <span className="num">{meetups.length}</span>
             </button>
-          )}
+            <button
+              type="button"
+              className={`chip ${freqFilter === "weekly" ? "active" : ""}`}
+              onClick={() => setFreqFilter("weekly")}
+            >
+              Weekly <span className="num">{weeklyCount}</span>
+            </button>
+            <button
+              type="button"
+              className={`chip ${freqFilter === "monthly" ? "active" : ""}`}
+              onClick={() => setFreqFilter("monthly")}
+            >
+              Monthly <span className="num">{meetups.length - weeklyCount}</span>
+            </button>
+            <button
+              type="button"
+              className={`chip ${beginnerOnly ? "active" : ""}`}
+              onClick={() => setBeginnerOnly(!beginnerOnly)}
+            >
+              Beginner
+            </button>
+          </div>
         </div>
+
         {filtered.length === 0 ? (
-          <div className="text-center py-12 text-ink-muted">
-            <p className="mb-3">No meetups match your search.</p>
-            <Link href="/submit" className="text-bitcoin-orange hover:underline">
-              Know one we don&apos;t have listed? Submit it →
+          <div className="empty">
+            <div className="empty-mark">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                <circle cx="9" cy="9" r="6" stroke="currentColor" strokeWidth="1.5" />
+                <path
+                  d="M14 14 L18 18"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                />
+              </svg>
+            </div>
+            <h3>No meetups match your filters</h3>
+            <p>
+              Try clearing the search or expanding the state to &ldquo;All states.&rdquo; Or —
+              start one yourself.
+            </p>
+            <Link href="/submit" className="btn btn-primary">
+              Submit a meetup
             </Link>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-            {filtered.map((m) => (
-              <MeetupCard key={m.id} meetup={m} highlighted={m.id === selectedId} />
-            ))}
-          </div>
+          <IndexDirectory
+            meetups={filtered}
+            selectedId={selectedId}
+            onSelect={setSelectedId}
+            onOpen={setOpenId}
+          />
         )}
       </section>
 
-      {/* Browse by state */}
-      <section className="mb-12">
-        <h2 className="text-xl text-white font-medium mb-4">Browse by state</h2>
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
-          {states.map((s) => (
-            <Link
-              key={s.abbr}
-              href={`/state/${s.slug}`}
-              className="block px-3 py-2 rounded border border-line-subtle bg-bg-card hover:border-bitcoin-orange/50 hover:bg-bg-elevated/40 transition-colors"
-            >
-              <div className="text-white text-sm">{s.name}</div>
-              <div className="text-ink-muted text-xs">{s.count} {s.count === 1 ? "meetup" : "meetups"}</div>
-            </Link>
-          ))}
+      <section className="section" style={{ paddingTop: 0 }}>
+        <div className="cta-strip">
+          <div>
+            <h3 className="cta-title">Run a meetup we don&apos;t have listed?</h3>
+            <p className="cta-sub">
+              Add your group in under a minute. Free, always. We verify and publish within
+              48 hours.
+            </p>
+          </div>
+          <Link href="/submit" className="btn btn-primary">
+            Submit a meetup →
+          </Link>
         </div>
       </section>
 
-      {/* Submit CTA */}
-      <section className="rounded-lg border border-bitcoin-orange/30 bg-bitcoin-orange/5 p-6 flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <div className="text-white font-medium text-base mb-1">
-            Run a meetup we don&apos;t have listed?
-          </div>
-          <div className="text-ink-secondary text-sm">
-            Add your group in under a minute. Free, always.
-          </div>
-        </div>
-        <Link
-          href="/submit"
-          className="bg-bitcoin-orange text-bg-dark px-5 py-2.5 rounded text-sm font-medium hover:bg-bitcoin-orangeLight transition-colors"
-        >
-          Submit a meetup
-        </Link>
-      </section>
-    </div>
+      <MeetupDrawer meetup={openMeetup} onClose={() => setOpenId(null)} />
+    </>
   );
 }
