@@ -132,7 +132,7 @@ export default async function MeetupDetailPage({ params }: Props) {
             <div className="flex flex-wrap gap-2">
               {meetup.website && (
                 <a
-                  className="btn"
+                  className="btn btn-primary"
                   href={meetup.website}
                   target="_blank"
                   rel="noopener noreferrer"

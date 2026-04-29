@@ -912,6 +912,26 @@ a { color: inherit; text-decoration: none; }
   gap: 8px;
   margin-top: 24px;
 }
+.drawer-actions .btn:only-child {
+  flex: 1;
+  justify-content: center;
+}
+
+/* Description paragraph at top of drawer-body — no double-pad against drawer-hero */
+.drawer-body > p:first-child {
+  margin-top: 0;
+  margin-bottom: 20px;
+}
+
+/* Small mono hint shown below the drawer CTA */
+.drawer-cta-hint {
+  font-family: "Geist Mono", monospace;
+  font-size: 11px;
+  color: var(--text-dim);
+  text-align: center;
+  margin-top: 12px;
+  letter-spacing: 0.04em;
+}
 
 /* ============ EMPTY STATE ============ */
 .empty {

@@ -126,7 +126,6 @@ export default function HomePage() {
               meetups={filtered}
               selectedId={selectedId}
               onSelect={setSelectedId}
-              onOpen={setOpenId}
             />
           </div>
           <div className="map-legend">

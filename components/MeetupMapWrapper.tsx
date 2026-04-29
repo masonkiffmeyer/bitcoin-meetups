@@ -18,7 +18,6 @@ type Props = {
   meetups: Meetup[];
   selectedId?: string | null;
   onSelect?: (id: string) => void;
-  onOpen?: (id: string) => void;
 };
 
 export default function MeetupMapWrapper(props: Props) {

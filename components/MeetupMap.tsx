@@ -1,10 +1,11 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { geoAlbersUsa, geoPath } from "d3-geo";
 import { feature } from "topojson-client";
 import type { Meetup } from "@/lib/types";
-import { getFreq } from "@/data/meetups";
+import { getFreq, stateSlug, citySlug } from "@/data/meetups";
 
 type StatePath = { id: string; name: string; d: string };
 type Projection = (point: [number, number]) => [number, number] | null;
@@ -14,10 +15,9 @@ type Props = {
   meetups: Meetup[];
   selectedId?: string | null;
   onSelect?: (id: string) => void;
-  onOpen?: (id: string) => void;
 };
 
-export default function MeetupMap({ meetups, selectedId, onSelect, onOpen }: Props) {
+export default function MeetupMap({ meetups, selectedId, onSelect }: Props) {
   const wrapRef = useRef<HTMLDivElement>(null);
   const [size, setSize] = useState({ W: 1200, H: 720 });
   const [statePaths, setStatePaths] = useState<{ paths: StatePath[]; projection: Projection } | null>(null);
@@ -193,27 +193,13 @@ export default function MeetupMap({ meetups, selectedId, onSelect, onOpen }: Pro
             {popupMeetup.lat.toFixed(3)}°N · {Math.abs(popupMeetup.lng).toFixed(3)}°W
           </div>
           <div className="map-popup-actions">
-            <button
-              type="button"
+            <Link
+              href={`/${stateSlug(popupMeetup.state)}/${citySlug(popupMeetup.city)}/${popupMeetup.slug}`}
               className="btn btn-primary"
-              onClick={() => {
-                onOpen?.(popupMeetup.id);
-                closePopup();
-              }}
+              onClick={(e) => e.stopPropagation()}
             >
               View details
-            </button>
-            {popupMeetup.website && (
-              <a
-                className="btn"
-                href={popupMeetup.website}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={(e) => e.stopPropagation()}
-              >
-                {popupMeetup.website.replace(/^https?:\/\//, "")} ↗
-              </a>
-            )}
+            </Link>
           </div>
         </div>
       )}

@@ -45,6 +45,8 @@ export default function MeetupDrawer({ meetup, onClose }: Props) {
               </div>
             </div>
             <div className="drawer-body">
+              <p>{meetup.description}</p>
+
               <div className="drawer-row">
                 <span className="k">Cadence</span>
                 <span>{meetup.cadence}</span>
@@ -63,54 +65,18 @@ export default function MeetupDrawer({ meetup, onClose }: Props) {
                   {meetup.lat.toFixed(4)}°N, {Math.abs(meetup.lng).toFixed(4)}°W
                 </span>
               </div>
-              {meetup.website && (
-                <div className="drawer-row">
-                  <span className="k">Website</span>
-                  <span style={{ color: "var(--orange)" }}>
-                    {meetup.website.replace(/^https?:\/\//, "")} ↗
-                  </span>
-                </div>
-              )}
-              {meetup.twitter && (
-                <div className="drawer-row">
-                  <span className="k">X / Twitter</span>
-                  <span style={{ color: "var(--orange)" }}>@{meetup.twitter} ↗</span>
-                </div>
-              )}
+
               <div className="drawer-actions">
-                {meetup.website ? (
-                  <a
-                    className="btn btn-primary"
-                    href={meetup.website}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    style={{ flex: 1, justifyContent: "center" }}
-                  >
-                    Visit website ↗
-                  </a>
-                ) : (
-                  <Link
-                    href={`/${stateSlug(meetup.state)}/${citySlug(meetup.city)}/${meetup.slug}`}
-                    className="btn btn-primary"
-                    style={{ flex: 1, justifyContent: "center" }}
-                  >
-                    Full details ↗
-                  </Link>
-                )}
-                <Link href={`/${stateSlug(meetup.state)}/${citySlug(meetup.city)}/${meetup.slug}`} className="btn">
-                  Permalink
+                <Link
+                  href={`/${stateSlug(meetup.state)}/${citySlug(meetup.city)}/${meetup.slug}`}
+                  className="btn btn-primary"
+                >
+                  View full details →
                 </Link>
               </div>
-              <p
-                style={{
-                  color: "var(--text-mute)",
-                  fontSize: 13,
-                  marginTop: 24,
-                  lineHeight: 1.6,
-                }}
-              >
-                {meetup.description}
-              </p>
+              <div className="drawer-cta-hint">
+                All links · contact · upcoming events on the meetup page
+              </div>
             </div>
           </>
         )}
