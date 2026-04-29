@@ -1,14 +1,17 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import type { Metadata } from "next";
-import { getAllStatesWithMeetups, getMeetupsByStateSlug } from "@/data/meetups";
+import {
+  getAllStatesWithMeetups,
+  getMeetupsByStateSlug,
+  citySlug,
+} from "@/data/meetups";
 import MeetupCard from "@/components/MeetupCard";
 
 type Props = { params: Promise<{ state: string }> };
 
 export async function generateStaticParams() {
-  const states = getAllStatesWithMeetups();
-  return states.map((s) => ({ state: s.slug }));
+  return getAllStatesWithMeetups().map((s) => ({ state: s.slug }));
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -35,7 +38,6 @@ export default async function StatePage({ params }: Props) {
   const stateName = stateMeetups[0].state;
   const stateAbbr = stateMeetups[0].stateAbbr;
 
-  // Group by city for cleaner organization
   const byCity = new Map<string, typeof stateMeetups>();
   for (const m of stateMeetups) {
     const existing = byCity.get(m.city) || [];
@@ -48,7 +50,6 @@ export default async function StatePage({ params }: Props) {
 
   return (
     <div className="max-w-5xl mx-auto px-6 py-8">
-      {/* Breadcrumb */}
       <nav className="text-xs text-ink-muted mb-6 flex items-center gap-2">
         <Link href="/" className="hover:text-bitcoin-orange">
           All meetups
@@ -57,7 +58,6 @@ export default async function StatePage({ params }: Props) {
         <span className="text-ink-secondary">{stateName}</span>
       </nav>
 
-      {/* Header */}
       <header className="mb-8">
         <h1 className="text-4xl text-white font-medium tracking-tight mb-3">
           Bitcoin Meetups in {stateName}
@@ -69,7 +69,6 @@ export default async function StatePage({ params }: Props) {
         </p>
       </header>
 
-      {/* Stats strip */}
       <section className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-10">
         <div className="rounded-lg border border-line-subtle bg-bg-card p-4">
           <div className="text-ink-muted text-xs tracking-widest mb-1">MEETUPS</div>
@@ -89,14 +88,18 @@ export default async function StatePage({ params }: Props) {
         </div>
       </section>
 
-      {/* City sections */}
       <section className="mb-12">
         {cities.map((city) => {
           const cityMeetups = byCity.get(city)!;
           return (
             <div key={city} className="mb-8">
               <h2 className="text-xl text-white font-medium mb-4 border-b border-line-subtle pb-2">
-                {city}
+                <Link
+                  href={`/${state}/${citySlug(city)}`}
+                  className="hover:text-bitcoin-orange transition-colors"
+                >
+                  {city}
+                </Link>
                 <span className="text-ink-muted text-sm font-normal ml-2">
                   ({cityMeetups.length} {cityMeetups.length === 1 ? "meetup" : "meetups"})
                 </span>
@@ -111,7 +114,6 @@ export default async function StatePage({ params }: Props) {
         })}
       </section>
 
-      {/* Missing? CTA */}
       <section className="rounded-lg border border-bitcoin-orange/30 bg-bitcoin-orange/5 p-6 flex flex-wrap items-center justify-between gap-4 mb-8">
         <div>
           <div className="text-white font-medium text-base mb-1">

@@ -1,17 +1,21 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { meetups, getMeetupBySlug } from "@/data/meetups";
+import { meetups, getMeetupByPath, stateSlug, citySlug } from "@/data/meetups";
 import type { Metadata } from "next";
 
-type Props = { params: Promise<{ slug: string }> };
+type Props = { params: Promise<{ state: string; city: string; slug: string }> };
 
 export async function generateStaticParams() {
-  return meetups.map((m) => ({ slug: m.slug }));
+  return meetups.map((m) => ({
+    state: stateSlug(m.state),
+    city: citySlug(m.city),
+    slug: m.slug,
+  }));
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { slug } = await params;
-  const meetup = getMeetupBySlug(slug);
+  const { state, city, slug } = await params;
+  const meetup = getMeetupByPath(state, city, slug);
   if (!meetup) return { title: "Meetup not found" };
   return {
     title: `${meetup.name} | Bitcoin Meetup in ${meetup.city}, ${meetup.stateAbbr}`,
@@ -20,13 +24,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function MeetupDetailPage({ params }: Props) {
-  const { slug } = await params;
-  const meetup = getMeetupBySlug(slug);
+  const { state, city, slug } = await params;
+  const meetup = getMeetupByPath(state, city, slug);
   if (!meetup) notFound();
 
-  const stateSlug = meetup.state.toLowerCase().replace(/\s+/g, "-");
-
-  // Structured data for SEO
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "Organization",
@@ -57,20 +58,22 @@ export default async function MeetupDetailPage({ params }: Props) {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
 
-      {/* Breadcrumb */}
       <nav className="text-xs text-ink-muted mb-6 flex items-center gap-2">
         <Link href="/" className="hover:text-bitcoin-orange">
           All meetups
         </Link>
         <span>›</span>
-        <Link href={`/state/${stateSlug}`} className="hover:text-bitcoin-orange">
+        <Link href={`/${state}`} className="hover:text-bitcoin-orange">
           {meetup.state}
+        </Link>
+        <span>›</span>
+        <Link href={`/${state}/${city}`} className="hover:text-bitcoin-orange">
+          {meetup.city}
         </Link>
         <span>›</span>
         <span className="text-ink-secondary">{meetup.name}</span>
       </nav>
 
-      {/* Header */}
       <header className="mb-8">
         <div className="text-bitcoin-orange text-sm mb-2">
           {meetup.city}, {meetup.state}
@@ -99,12 +102,10 @@ export default async function MeetupDetailPage({ params }: Props) {
         </div>
       </header>
 
-      {/* Description */}
       <section className="mb-8">
         <p className="text-ink-secondary text-base leading-relaxed">{meetup.description}</p>
       </section>
 
-      {/* Details grid */}
       <section className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
         <div className="rounded-lg border border-line-subtle bg-bg-card p-5">
           <div className="text-ink-muted text-xs tracking-widest mb-1">CADENCE</div>
@@ -126,7 +127,6 @@ export default async function MeetupDetailPage({ params }: Props) {
         </div>
       </section>
 
-      {/* Contact links */}
       {(meetup.website || meetup.twitter || meetup.nostr || meetup.telegram || meetup.meetupUrl) && (
         <section className="mb-8">
           <h2 className="text-white font-medium text-base mb-3">Connect with this meetup</h2>
@@ -185,7 +185,6 @@ export default async function MeetupDetailPage({ params }: Props) {
         </section>
       )}
 
-      {/* Claim / update CTA */}
       <section className="rounded-lg border border-line-subtle bg-bg-card p-5 mb-8">
         <div className="text-white font-medium text-sm mb-1">Organize this meetup?</div>
         <div className="text-ink-secondary text-xs mb-3">
@@ -200,8 +199,11 @@ export default async function MeetupDetailPage({ params }: Props) {
       </section>
 
       <div className="border-t border-line-subtle pt-6">
-        <Link href="/" className="text-ink-muted text-sm hover:text-bitcoin-orange">
-          ← Back to all meetups
+        <Link
+          href={`/${state}/${city}`}
+          className="text-ink-muted text-sm hover:text-bitcoin-orange"
+        >
+          ← Back to {meetup.city} meetups
         </Link>
       </div>
     </div>

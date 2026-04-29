@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import type { Meetup } from "@/lib/types";
-import { getFreq } from "@/data/meetups";
+import { getFreq, stateSlug, citySlug } from "@/data/meetups";
 
 type Props = {
   meetup: Meetup | null;
@@ -90,14 +90,14 @@ export default function MeetupDrawer({ meetup, onClose }: Props) {
                   </a>
                 ) : (
                   <Link
-                    href={`/meetups/${meetup.slug}`}
+                    href={`/${stateSlug(meetup.state)}/${citySlug(meetup.city)}/${meetup.slug}`}
                     className="btn btn-primary"
                     style={{ flex: 1, justifyContent: "center" }}
                   >
                     Full details ↗
                   </Link>
                 )}
-                <Link href={`/meetups/${meetup.slug}`} className="btn">
+                <Link href={`/${stateSlug(meetup.state)}/${citySlug(meetup.city)}/${meetup.slug}`} className="btn">
                   Permalink
                 </Link>
               </div>

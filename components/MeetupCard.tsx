@@ -1,10 +1,11 @@
 import Link from "next/link";
 import type { Meetup } from "@/lib/types";
+import { stateSlug, citySlug } from "@/data/meetups";
 
 export default function MeetupCard({ meetup, highlighted }: { meetup: Meetup; highlighted?: boolean }) {
   return (
     <Link
-      href={`/meetups/${meetup.slug}`}
+      href={`/${stateSlug(meetup.state)}/${citySlug(meetup.city)}/${meetup.slug}`}
       className={`block rounded-lg border p-4 transition-all hover:border-bitcoin-orange/50 hover:bg-bg-elevated/40 ${
         highlighted
           ? "border-bitcoin-orange/40 bg-bitcoin-orange/5"
