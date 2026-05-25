@@ -31,3 +31,10 @@ yarn-error.log*
 
 # local submissions (MVP)
 data/submissions.json
+
+# design drafts (local-only handoff bundle from Claude Design)
+.design-drafts/
+
+# local review screenshots
+/Capture*.PNG
+/Capture*.png

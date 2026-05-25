@@ -5,7 +5,9 @@ export default function SiteNav() {
     <nav className="nav">
       <Link href="/" className="nav-brand">
         <span className="nav-brand-mark">₿</span>
-        BITCOIN IS BETTER
+        <span>
+          Bitcoin Meetups<span className="nav-brand-sub">· US</span>
+        </span>
       </Link>
       <div className="nav-links">
         <a href="https://www.bitcoinisbetter.org">Home</a>
@@ -15,9 +17,13 @@ export default function SiteNav() {
         <a href="https://www.bitcoinisbetter.org/about">About</a>
       </div>
       <div className="nav-actions">
-        <a href="https://www.bitcoinisbetter.org/donate" className="btn btn-primary">
-          Donate
-        </a>
+        <span className="nav-live">
+          <span className="live-dot" />
+          LIVE · v2026.04
+        </span>
+        <Link href="/submit" className="btn btn-primary">
+          Submit a meetup
+        </Link>
       </div>
     </nav>
   );

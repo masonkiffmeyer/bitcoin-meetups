@@ -87,10 +87,10 @@ export default function MeetupMap({ meetups, selectedId, onSelect }: Props) {
   };
   const closePopup = () => setPopupId(null);
 
-  const stroke = "#2A2724";
-  const landFill = "#161513";
-  const oceanFill = "#0E0D0B";
-  const gridStroke = "rgba(255,255,255,0.04)";
+  const stroke = "#E0D6C2";
+  const landFill = "#F0E9DB";
+  const oceanFill = "#FFFFFF";
+  const gridStroke = "rgba(26, 23, 20, 0.05)";
 
   return (
     <div className="map-frame" ref={wrapRef} onClick={closePopup}>
@@ -123,7 +123,7 @@ export default function MeetupMap({ meetups, selectedId, onSelect }: Props) {
           </g>
         )}
 
-        <g stroke="rgba(255,255,255,0.18)" strokeWidth="1" fill="none">
+        <g stroke="rgba(133, 123, 110, 0.45)" strokeWidth="1" fill="none">
           <path d="M 12 12 L 32 12 M 12 12 L 12 32" />
           <path d={`M ${W - 12} 12 L ${W - 32} 12 M ${W - 12} 12 L ${W - 12} 32`} />
           <path d={`M 12 ${H - 12} L 32 ${H - 12} M 12 ${H - 12} L 12 ${H - 32}`} />
@@ -132,7 +132,7 @@ export default function MeetupMap({ meetups, selectedId, onSelect }: Props) {
           />
         </g>
 
-        <g fontFamily="'Geist Mono', monospace" fontSize="11" fill="rgba(255,255,255,0.35)">
+        <g fontFamily="'Geist Mono', monospace" fontSize="11" fill="rgba(133, 123, 110, 0.85)">
           <text x="40" y="24">ALBERS USA · NAD83</text>
           <text x={W - 40} y="24" textAnchor="end">N {meetups.length} MEETUPS</text>
           <text x="40" y={H - 12}>MEETUPS · 2026</text>
@@ -155,8 +155,8 @@ export default function MeetupMap({ meetups, selectedId, onSelect }: Props) {
               <circle
                 r={sel ? 8 : 4.5}
                 fill="#F7931A"
-                stroke="#0A0908"
-                strokeWidth={sel ? 2 : 1.25}
+                stroke="#FFFFFF"
+                strokeWidth={sel ? 2.5 : 1.5}
               />
               {sel && (
                 <circle r="13" fill="none" stroke="#F7931A" strokeWidth="1" opacity="0.55" />

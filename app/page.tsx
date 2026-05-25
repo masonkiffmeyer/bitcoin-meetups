@@ -57,16 +57,21 @@ export default function HomePage() {
         <div className="hero-titlebar">
           <div className="hero-titlebar-inner">
             <div className="hero-title-block">
-              <div className="hero-eyebrow">
-                <span className="blink" />
-                <span className="eyebrow">United States · Live directory</span>
+              <div className="hero-eyebrow" style={{ gap: 10 }}>
+                <span className="pill pill-orange">
+                  <span className="blink" />
+                  Live directory
+                </span>
+                <span className="pill pill-ghost">
+                  {meetups.length} nodes · {stateGroups.length} states
+                </span>
               </div>
               <h1 className="hero-title">
                 Find your <em>local</em> Bitcoin meetup.
               </h1>
               <p className="hero-sub">
-                {meetups.length} meetups across {stateGroups.length} states. Search, filter
-                by cadence, or click any pin on the map below.
+                A community-maintained map of every in-person Bitcoin meetup in the
+                United States. Click any pin, or browse by state.
               </p>
             </div>
 
@@ -145,8 +150,9 @@ export default function HomePage() {
       <section className="section">
         <div className="section-head">
           <div>
+            <div className="eyebrow-orange" style={{ marginBottom: 8 }}>/ Discover</div>
             <h2 className="section-title">
-              Directory
+              Every active <em>meetup</em>, one pin each.
               <span className="count">
                 {String(filtered.length).padStart(2, "0")} /{" "}
                 {String(meetups.length).padStart(2, "0")}
@@ -214,18 +220,25 @@ export default function HomePage() {
         )}
       </section>
 
-      <section className="section" style={{ paddingTop: 0 }}>
-        <div className="cta-strip">
+      <section className="cta-band">
+        <div className="cta-band-inner">
           <div>
-            <h3 className="cta-title">Run a meetup we don&apos;t have listed?</h3>
-            <p className="cta-sub">
-              Add your group in under a minute. Free, always. We verify and publish within
-              48 hours.
-            </p>
+            <div className="cta-band-eyebrow">/ Organize</div>
+            <h3 className="cta-band-title">
+              No meetup in your city? <em>Start one.</em>
+            </h3>
           </div>
-          <Link href="/submit" className="btn btn-primary">
-            Submit a meetup →
-          </Link>
+          <div className="cta-band-actions">
+            <Link href="/submit" className="btn-on-orange">
+              Submit a meetup →
+            </Link>
+            <a
+              href="https://www.bitcoinisbetter.org/learn"
+              className="btn-on-orange-ghost"
+            >
+              Read the playbook
+            </a>
+          </div>
         </div>
       </section>
 

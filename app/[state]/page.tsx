@@ -4,9 +4,10 @@ import type { Metadata } from "next";
 import {
   getAllStatesWithMeetups,
   getMeetupsByStateSlug,
-  citySlug,
+  getFreq,
 } from "@/data/meetups";
-import type { Meetup } from "@/lib/types";
+import StateOutlineMap from "@/components/StateOutlineMap";
+import StateDirectoryClient from "@/components/StateDirectoryClient";
 
 type Props = { params: Promise<{ state: string }> };
 
@@ -30,12 +31,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-function rowLink(m: Meetup): string {
-  if (m.website) return `${m.website.replace(/^https?:\/\//, "")} ↗`;
-  if (m.twitter) return `@${m.twitter} ↗`;
-  return "";
-}
-
 export default async function StatePage({ params }: Props) {
   const { state } = await params;
   const stateMeetups = getMeetupsByStateSlug(state);
@@ -44,77 +39,75 @@ export default async function StatePage({ params }: Props) {
   const stateName = stateMeetups[0].state;
   const stateAbbr = stateMeetups[0].stateAbbr;
 
-  const byCity = new Map<string, Meetup[]>();
+  const cityCounts: Record<string, number> = {};
   for (const m of stateMeetups) {
-    const list = byCity.get(m.city) || [];
-    list.push(m);
-    byCity.set(m.city, list);
+    cityCounts[m.city] = (cityCounts[m.city] ?? 0) + 1;
   }
-  const cities = Array.from(byCity.keys()).sort();
+  const cities = Object.keys(cityCounts).sort(
+    (a, b) => cityCounts[b] - cityCounts[a] || a.localeCompare(b)
+  );
+
+  const weeklyCount = stateMeetups.filter((m) => getFreq(m) === "weekly").length;
+  const newcomerCount = stateMeetups.filter((m) => m.beginnerFriendly).length;
 
   return (
     <section className="section">
-      <div className="eyebrow mb-6">
-        <Link href="/">All meetups</Link> · {stateName}
+      <div className="breadcrumb mb-6">
+        / <Link href="/">UNITED STATES</Link> /{" "}
+        <span className="current">{stateName.toUpperCase()}</span>
       </div>
 
-      <h1 className="hero-title">
-        Bitcoin Meetups in <em>{stateName}</em>
-      </h1>
-      <p className="hero-sub">
-        {stateMeetups.length} active bitcoin{" "}
-        {stateMeetups.length === 1 ? "meetup" : "meetups"} listed across {cities.length}{" "}
-        {cities.length === 1 ? "city" : "cities"} in {stateName}.
-      </p>
-
-      <div className="stat-strip mt-12 mb-12">
-        <div className="stat-strip-cell">
-          <span className="stat-strip-num">{stateMeetups.length}</span>
-          <span className="stat-strip-label">Meetups</span>
-        </div>
-        <div className="stat-strip-cell">
-          <span className="stat-strip-num">{cities.length}</span>
-          <span className="stat-strip-label">Cities</span>
-        </div>
-        <div className="stat-strip-cell">
-          <span className="stat-strip-num">{stateAbbr}</span>
-          <span className="stat-strip-label">State</span>
-        </div>
-      </div>
-
-      <div className="mb-12">
-        {cities.map((city) => {
-          const list = byCity.get(city)!;
-          return (
-            <div key={city} className="dir-state-block">
-              <div className="dir-state-label">
-                <Link
-                  href={`/${state}/${citySlug(city)}`}
-                  className="dir-state-name"
-                >
-                  {city}
-                </Link>
-                <span className="dir-state-count">{list.length}</span>
+      <div className="page-hero">
+        <div className="page-hero-left">
+          <div className="page-hero-titleblock">
+            <div className="page-hero-badge">{stateAbbr}</div>
+            <div>
+              <div className="eyebrow-orange" style={{ marginBottom: 6 }}>
+                / State directory
               </div>
-              {list.map((m) => (
-                <Link
-                  key={m.id}
-                  href={`/${state}/${citySlug(m.city)}/${m.slug}`}
-                  className="drow drow-no-city"
-                >
-                  <span className="drow-marker" />
-                  <span className="drow-name">{m.name}</span>
-                  <span className="drow-city">{m.city}</span>
-                  <span className="drow-cadence">{m.cadence}</span>
-                  <span className="drow-link">{rowLink(m)}</span>
-                </Link>
-              ))}
+              <h1 className="hero-title">
+                Bitcoin meetups in <em>{stateName}</em>
+              </h1>
             </div>
-          );
-        })}
+          </div>
+          <p className="page-hero-desc">
+            {stateMeetups.length} active bitcoin{" "}
+            {stateMeetups.length === 1 ? "meetup" : "meetups"} across {cities.length}{" "}
+            {cities.length === 1 ? "city" : "cities"} in {stateName}. Most groups are
+            walk-in, all are free.
+          </p>
+          <div className="stat-row">
+            <div className="stat-block">
+              <span className="stat-block-num">{cities.length}</span>
+              <span className="stat-block-label">{cities.length === 1 ? "City" : "Cities"}</span>
+            </div>
+            <div className="stat-block">
+              <span className="stat-block-num">{stateMeetups.length}</span>
+              <span className="stat-block-label">{stateMeetups.length === 1 ? "Meetup" : "Meetups"}</span>
+            </div>
+            <div className="stat-block">
+              <span className="stat-block-num">{weeklyCount}</span>
+              <span className="stat-block-label">Weekly</span>
+            </div>
+            <div className="stat-block">
+              <span className="stat-block-num">{newcomerCount}</span>
+              <span className="stat-block-label">Newcomer</span>
+              <span className="stat-block-sub">friendly</span>
+            </div>
+          </div>
+        </div>
+
+        <StateOutlineMap stateAbbr={stateAbbr} meetups={stateMeetups} />
       </div>
 
-      <div className="cta-strip">
+      <StateDirectoryClient
+        stateSlugValue={state}
+        meetups={stateMeetups}
+        cities={cities}
+        cityCounts={cityCounts}
+      />
+
+      <div className="cta-strip" style={{ marginTop: 56 }}>
         <div>
           <h3 className="cta-title">Missing a {stateName} meetup?</h3>
           <p className="cta-sub">

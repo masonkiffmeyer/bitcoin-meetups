@@ -9,7 +9,7 @@ import {
   citySlug,
   getFreq,
 } from "@/data/meetups";
-import type { Meetup } from "@/lib/types";
+import CityPinMap from "@/components/CityPinMap";
 
 type Props = { params: Promise<{ state: string; city: string }> };
 
@@ -44,12 +44,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-function rowLink(m: Meetup): string {
-  if (m.website) return `${m.website.replace(/^https?:\/\//, "")} ↗`;
-  if (m.twitter) return `@${m.twitter} ↗`;
-  return "";
-}
-
 export default async function CityPage({ params }: Props) {
   const { state, city } = await params;
   const cityMeetups = getMeetupsByCityInState(state, city);
@@ -59,61 +53,135 @@ export default async function CityPage({ params }: Props) {
   const stateName = cityMeetups[0].state;
   const stateAbbr = cityMeetups[0].stateAbbr;
   const weeklyCount = cityMeetups.filter((m) => getFreq(m) === "weekly").length;
+  const newcomerCount = cityMeetups.filter((m) => m.beginnerFriendly).length;
 
   const otherCities = getCitiesInState(state).filter((c) => c.slug !== city);
 
   return (
     <section className="section">
-      <div className="eyebrow mb-6">
-        <Link href="/">All meetups</Link> ·{" "}
-        <Link href={`/${state}`}>{stateName}</Link> · {cityName}
+      <div className="breadcrumb mb-6">
+        / <Link href="/">UNITED STATES</Link> /{" "}
+        <Link href={`/${state}`}>{stateName.toUpperCase()}</Link> /{" "}
+        <span className="current">{cityName.toUpperCase()}</span>
       </div>
 
-      <h1 className="hero-title">
-        Bitcoin Meetups in{" "}
-        <em>
-          {cityName}, {stateAbbr}
-        </em>
-      </h1>
-      <p className="hero-sub">
-        {cityMeetups.length} bitcoin {cityMeetups.length === 1 ? "meetup" : "meetups"} listed in{" "}
-        {cityName}, {stateName}.
-      </p>
+      <div className="page-hero">
+        <div className="page-hero-left">
+          <div className="eyebrow-orange" style={{ marginBottom: 8 }}>
+            / City directory · {stateAbbr}
+          </div>
+          <h1 className="hero-title">
+            Bitcoin in <em>{cityName}</em>
+          </h1>
+          <p className="page-hero-desc">
+            {cityMeetups.length} active bitcoin {cityMeetups.length === 1 ? "meetup" : "meetups"} in{" "}
+            {cityName}, {stateName}. Most groups are walk-in, all are free.
+          </p>
+          <div className="page-hero-actions">
+            <Link href="/" className="btn btn-primary">
+              Show on map →
+            </Link>
+            <Link href="/submit" className="btn btn-ghost">
+              Submit a meetup
+            </Link>
+          </div>
+        </div>
+        <CityPinMap cityName={cityName} meetups={cityMeetups} />
+      </div>
 
-      <div className="stat-strip mt-12 mb-12">
-        <div className="stat-strip-cell">
-          <span className="stat-strip-num">{cityMeetups.length}</span>
-          <span className="stat-strip-label">Meetups</span>
-        </div>
-        <div className="stat-strip-cell">
-          <span className="stat-strip-num">{weeklyCount}</span>
-          <span className="stat-strip-label">Weekly</span>
-        </div>
-        <div className="stat-strip-cell">
-          <span className="stat-strip-num">{stateAbbr}</span>
-          <span className="stat-strip-label">State</span>
+      {/* Dark stats band */}
+      <div className="dark-stats-band" style={{ marginTop: 48 }}>
+        <div className="dark-stats-band-inner">
+          <div className="dark-stat">
+            <span className="dark-stat-num">{cityMeetups.length}</span>
+            <span className="dark-stat-label">Active meetups</span>
+          </div>
+          <div className="dark-stat">
+            <span className="dark-stat-num">{weeklyCount}</span>
+            <span className="dark-stat-label">Weekly cadence</span>
+          </div>
+          {newcomerCount > 0 && (
+            <div className="dark-stat">
+              <span className="dark-stat-num">{newcomerCount}</span>
+              <span className="dark-stat-label">Newcomer-friendly</span>
+            </div>
+          )}
+          <div className="dark-stat">
+            <span className="dark-stat-num">$0</span>
+            <span className="dark-stat-label">Cost to attend</span>
+          </div>
+          <span className="dark-stats-live">
+            <span className="live-dot" />
+            LIVE
+          </span>
         </div>
       </div>
 
-      <div className="mb-12">
-        {cityMeetups.map((m) => (
-          <Link
-            key={m.id}
-            href={`/${state}/${city}/${m.slug}`}
-            className="drow drow-no-city"
-          >
-            <span className="drow-marker" />
-            <span className="drow-name">{m.name}</span>
-            <span className="drow-city">{m.city}</span>
-            <span className="drow-cadence">{m.cadence}</span>
-            <span className="drow-link">{rowLink(m)}</span>
-          </Link>
-        ))}
+      {/* Meetup cards */}
+      <div className="state-main-head" style={{ marginTop: 56 }}>
+        <h2 style={{ fontSize: 28, margin: 0, letterSpacing: "-0.015em", fontWeight: 500 }}>
+          All meetups in {cityName}
+        </h2>
+        <div className="state-main-sort">
+          {cityMeetups.length} {cityMeetups.length === 1 ? "LISTING" : "LISTINGS"}
+        </div>
+      </div>
+
+      <div className="meetup-card-grid">
+        {cityMeetups.map((m) => {
+          const freq = getFreq(m);
+          return (
+            <Link
+              key={m.id}
+              href={`/${state}/${city}/${m.slug}`}
+              className="meetup-card"
+            >
+              <div className="meetup-card-head">
+                <div>
+                  <span className={`pill ${freq === "weekly" ? "pill-orange" : ""}`}>
+                    ● {freq === "weekly" ? "WEEKLY" : "MONTHLY"}
+                  </span>
+                  <h3 className="meetup-card-title">{m.name}</h3>
+                  <p className="meetup-card-venue">{m.venue}</p>
+                </div>
+                {m.needsVerification && (
+                  <div className="meetup-card-meta">
+                    UNVERIFIED
+                  </div>
+                )}
+              </div>
+
+              <p className="meetup-card-desc">{m.description}</p>
+
+              {m.tags && m.tags.length > 0 && (
+                <div className="meetup-card-tags">
+                  {m.tags.map((t) => (
+                    <span key={t} className="pill">
+                      {t}
+                    </span>
+                  ))}
+                </div>
+              )}
+
+              <div className="meetup-card-foot">
+                <div className="meetup-card-foot-cell">
+                  <span className="k">Cadence</span>
+                  <span className="v">{m.cadence}</span>
+                </div>
+                <div className="meetup-card-foot-cell">
+                  <span className="k">Attend</span>
+                  <span className="v">{m.attendance}</span>
+                </div>
+                <span className="btn btn-primary">Open →</span>
+              </div>
+            </Link>
+          );
+        })}
       </div>
 
       {otherCities.length > 0 && (
-        <div className="mb-12">
-          <div className="eyebrow mb-4">Nearby cities in {stateName}</div>
+        <div style={{ marginTop: 56 }}>
+          <div className="eyebrow-orange mb-3">/ Nearby</div>
           <div className="filter-bar">
             {otherCities.map((c) => (
               <Link key={c.slug} href={`/${state}/${c.slug}`} className="chip">
@@ -123,18 +191,6 @@ export default async function CityPage({ params }: Props) {
           </div>
         </div>
       )}
-
-      <div className="cta-strip">
-        <div>
-          <h3 className="cta-title">Missing a {cityName} meetup?</h3>
-          <p className="cta-sub">
-            Help us keep this directory complete. Takes less than a minute.
-          </p>
-        </div>
-        <Link href="/submit" className="btn btn-primary">
-          Submit a meetup
-        </Link>
-      </div>
 
       <div className="tail eyebrow">
         <Link href={`/${state}`}>← Back to {stateName} meetups</Link>

@@ -7,12 +7,15 @@ export default function SiteFooter() {
         <div className="footer-brand-block">
           <div className="footer-brand">
             <span className="nav-brand-mark">₿</span>
-            BITCOIN IS BETTER
+            <span>Bitcoin Meetups · US</span>
           </div>
           <p className="footer-desc">
-            Helping people discover and understand bitcoin. This meetup directory is
-            maintained as a community resource.
+            A community-maintained directory of every in-person bitcoin meetup in the
+            United States. Free, open, no logins. <em>Built by bitcoiners, for bitcoiners.</em>
           </p>
+          <Link href="/submit" className="btn btn-ghost">
+            Submit a meetup
+          </Link>
         </div>
         <div className="footer-col">
           <h4>Directory</h4>
@@ -37,8 +40,9 @@ export default function SiteFooter() {
         </div>
       </div>
       <div className="footer-bottom">
-        <span>© 2026 · BITCOINISBETTER.ORG</span>
-        <span>LIVE DIRECTORY · v2026.04</span>
+        <span>ALBERS USA · NAD83</span>
+        <span>NO SIGN-IN · NO TRACKERS · NO PAYWALL</span>
+        <span>V2026.04 · © BITCOINISBETTER.ORG</span>
       </div>
     </footer>
   );

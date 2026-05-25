@@ -108,7 +108,7 @@ export default function MiniUSMap({ activeStateCode, neighborCodes = [] }: Props
                   ? "url(#mini-hatch)"
                   : "var(--bg-elev-2)"
               }
-              stroke={isActive ? "var(--orange)" : "var(--line)"}
+              stroke={isActive ? "var(--orange)" : "var(--line-strong)"}
               strokeWidth="0.6"
             />
           );

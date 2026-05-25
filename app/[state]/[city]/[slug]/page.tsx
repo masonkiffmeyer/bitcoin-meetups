@@ -68,140 +68,180 @@ export default async function MeetupDetailPage({ params }: Props) {
     meetup.meetupUrl
   );
 
+  const freq = getFreq(meetup);
+  const cadenceLabel = freq === "weekly" ? "Weekly" : "Monthly";
+
+  const directionsUrl = `https://www.google.com/maps/dir/?api=1&destination=${meetup.lat},${meetup.lng}`;
+
   return (
     <section className="section">
-      <div className="max-w-2xl mx-auto">
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-        />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
 
-        <div className="eyebrow mb-6">
-          <Link href="/">All meetups</Link> ·{" "}
-          <Link href={`/${state}`}>{meetup.state}</Link> ·{" "}
-          <Link href={`/${state}/${city}`}>{meetup.city}</Link> · {meetup.name}
-        </div>
+      <div className="breadcrumb mb-6">
+        / <Link href="/">US</Link> /{" "}
+        <Link href={`/${state}`}>{meetup.state.toUpperCase()}</Link> /{" "}
+        <Link href={`/${state}/${city}`}>{meetup.city.toUpperCase()}</Link> /{" "}
+        <span className="current">{meetup.name.toUpperCase()}</span>
+      </div>
 
-        <div className="drawer-hero">
-          <div className="drawer-eyebrow">
-            <span className={`freq-dot freq-${getFreq(meetup)}`}>
-              <span className="freq-dot-inner" />
-              {getFreq(meetup) === "weekly" ? "Weekly" : "Monthly"}
+      <div className="meetup-hero">
+        <div className="meetup-hero-main">
+          <div className="meetup-hero-pills">
+            <span className={`pill ${freq === "weekly" ? "pill-orange" : ""}`}>
+              ● {cadenceLabel}
             </span>
             {meetup.tags?.map((t) => (
-              <span key={t} className="mcard-tag">
+              <span key={t} className="pill">
                 {t}
               </span>
             ))}
             {meetup.needsVerification && (
-              <span className="mcard-tag">Listing unverified</span>
+              <span className="pill">Listing unverified</span>
             )}
           </div>
-          <h1 className="drawer-name">{meetup.name}</h1>
-          <div className="drawer-loc">
-            {meetup.city}, {meetup.state}
+          <h1 className="hero-title">{meetup.name}</h1>
+          <p className="hero-sub" style={{ color: "var(--orange-deep)" }}>
+            {meetup.city}, <em>{meetup.state}</em>
+          </p>
+          <p className="meetup-hero-desc">{meetup.description}</p>
+
+          <div className="meetup-hero-actions">
+            <a
+              href={directionsUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn btn-primary"
+            >
+              Get directions →
+            </a>
+            {meetup.website && (
+              <a
+                className="btn btn-ghost"
+                href={meetup.website}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Visit website ↗
+              </a>
+            )}
           </div>
         </div>
 
-        <div className="drawer-body">
-          <div className="drawer-row">
-            <span className="k">Cadence</span>
-            <span>{meetup.cadence}</span>
-          </div>
-          <div className="drawer-row">
-            <span className="k">Venue</span>
-            <span>{meetup.venue}</span>
-          </div>
-          <div className="drawer-row">
-            <span className="k">Attendance</span>
-            <span>{meetup.attendance}</span>
-          </div>
-          <div className="drawer-row">
-            <span className="k">Coordinates</span>
-            <span className="mono">
-              {meetup.lat.toFixed(4)}°N, {Math.abs(meetup.lng).toFixed(4)}°W
+        <aside className="meetup-next-card">
+          <div className="meetup-next-card-head">
+            <span className="eyebrow">/ Cadence</span>
+            <span className="pill pill-live">
+              <span className="freq-dot-inner" style={{ background: "var(--green-live)" }} />
+              Active
             </span>
           </div>
-
-          <p>{meetup.description}</p>
-        </div>
-
-        {hasContacts && (
-          <div className="mt-8">
-            <div className="eyebrow mb-3">Connect</div>
-            <div className="flex flex-wrap gap-2">
-              {meetup.website && (
-                <a
-                  className="btn btn-primary"
-                  href={meetup.website}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  Website ↗
-                </a>
-              )}
-              {meetup.twitter && (
-                <a
-                  className="btn"
-                  href={`https://x.com/${meetup.twitter}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  @{meetup.twitter} on X ↗
-                </a>
-              )}
-              {meetup.nostr && (
-                <a
-                  className="btn"
-                  href={`https://njump.me/${meetup.nostr}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  Nostr ↗
-                </a>
-              )}
-              {meetup.telegram && (
-                <a
-                  className="btn"
-                  href={meetup.telegram}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  Telegram ↗
-                </a>
-              )}
-              {meetup.meetupUrl && (
-                <a
-                  className="btn"
-                  href={meetup.meetupUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  Meetup.com ↗
-                </a>
-              )}
+          <div className="meetup-next-card-cadence">
+            <div className="meetup-next-card-frequency">{cadenceLabel}</div>
+            <div className="meetup-next-card-when">{meetup.cadence}</div>
+          </div>
+          <div className="meetup-next-card-rows">
+            <div>
+              <div className="eyebrow">Venue</div>
+              <div className="meetup-next-card-value">{meetup.venue}</div>
+            </div>
+            <div>
+              <div className="eyebrow">Typical attendance</div>
+              <div className="meetup-next-card-value">{meetup.attendance}</div>
+            </div>
+            <div>
+              <div className="eyebrow">Coordinates</div>
+              <div className="meetup-next-card-value mono" style={{ fontSize: 13 }}>
+                {meetup.lat.toFixed(4)}°N · {Math.abs(meetup.lng).toFixed(4)}°W
+              </div>
             </div>
           </div>
-        )}
+          {hasContacts && (
+            <a
+              href={meetup.website || `https://x.com/${meetup.twitter}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn btn-dark"
+              style={{ justifyContent: "center", width: "100%" }}
+            >
+              Visit group page →
+            </a>
+          )}
+        </aside>
+      </div>
 
-        <div className="info-card mt-8">
-          <div className="info-card-title">Organize this meetup?</div>
-          <div className="info-card-sub">
-            Claim this listing to keep it up to date and add upcoming event details.
+      {hasContacts && (
+        <div className="meetup-connect">
+          <div className="eyebrow-orange" style={{ marginBottom: 12 }}>/ Connect</div>
+          <div className="meetup-connect-buttons">
+            {meetup.website && (
+              <a
+                className="btn"
+                href={meetup.website}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Website ↗
+              </a>
+            )}
+            {meetup.twitter && (
+              <a
+                className="btn"
+                href={`https://x.com/${meetup.twitter}`}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                @{meetup.twitter} on X ↗
+              </a>
+            )}
+            {meetup.nostr && (
+              <a
+                className="btn"
+                href={`https://njump.me/${meetup.nostr}`}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Nostr ↗
+              </a>
+            )}
+            {meetup.telegram && (
+              <a
+                className="btn"
+                href={meetup.telegram}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Telegram ↗
+              </a>
+            )}
+            {meetup.meetupUrl && (
+              <a
+                className="btn"
+                href={meetup.meetupUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Meetup.com ↗
+              </a>
+            )}
           </div>
-          <Link
-            href={`/submit?update=${meetup.slug}`}
-            className="info-card-link"
-          >
-            Claim or update this listing →
-          </Link>
         </div>
+      )}
 
-        <div className="tail eyebrow">
-          <Link href={`/${state}/${city}`}>
-            ← Back to {meetup.city} meetups
-          </Link>
+      <div className="info-card" style={{ marginTop: 40 }}>
+        <div className="info-card-title">Organize this meetup?</div>
+        <div className="info-card-sub">
+          Claim this listing to keep it up to date and add upcoming event details.
         </div>
+        <Link href={`/submit?update=${meetup.slug}`} className="info-card-link">
+          Claim or update this listing →
+        </Link>
+      </div>
+
+      <div className="tail eyebrow">
+        <Link href={`/${state}/${city}`}>← Back to {meetup.city} meetups</Link>
       </div>
     </section>
   );
