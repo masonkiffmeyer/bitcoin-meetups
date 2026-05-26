@@ -32,8 +32,11 @@ export default function SiteNav() {
         className="bib-logo"
         aria-label="Bitcoin Is Better"
       >
-        <span className="bib-logo-mark">₿</span>
-        <span className="bib-logo-text">is better</span>
+        <img
+          src="/bitcoinisbetter-logo.png"
+          alt="Bitcoin Is Better"
+          className="bib-logo-img"
+        />
       </a>
       <div className="bib-nav-right">
         <div className="bib-nav-links">
