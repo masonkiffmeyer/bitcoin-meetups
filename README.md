@@ -54,7 +54,7 @@ components/
 └── MeetupDrawer.tsx                      # Slide-in detail panel (home page)
 
 data/
-├── meetups.ts                            # 55 seed meetups + slug/lookup helpers
+├── meetups.ts                            # 112 meetups (from master sheet) + slug/lookup helpers
 └── submissions.json                      # Created on first submission (gitignored)
 
 lib/
@@ -65,9 +65,9 @@ lib/
 
 ```
 /                                  Home directory (search, filter, map, address book)
-/[state]                           State hub  (e.g. /virginia)
-/[state]/[city]                    City hub   (e.g. /virginia/lynchburg)
-/[state]/[city]/[slug]             Meetup     (e.g. /virginia/lynchburg/lynchburg-bitcoiners)
+/[state]                           State hub  (e.g. /texas)
+/[state]/[city]                    City hub   (e.g. /texas/austin)
+/[state]/[city]/[slug]             Meetup     (e.g. /texas/austin/bitcoin-commons-austin)
 /submit                            Submission form
 /submit?update=[slug]              Update a listing
 /api/submit                        POST endpoint
@@ -92,15 +92,32 @@ City slugs strip periods so `St. Louis` becomes `st-louis`. Slug helpers live in
 
 ## IMPORTANT: Data verification before launch
 
-The seed data in `data/meetups.ts` contains 55 meetups. **54 of them are marked `needsVerification: true`** — they were populated from general knowledge and public indicators, but you MUST personally verify each one before public launch. Check:
+`data/meetups.ts` contains 112 meetups across 40 states, transcribed from the
+master spreadsheet (`Meetups_Database__merged_meetups_final`), which merges BTC
+Map, bitcoin-only.com/meetups, and the earlier hand-built entries. **Every entry
+is marked `needsVerification: true`** — none has been personally confirmed. You
+MUST verify each one before public launch. Check:
 
 1. Does this meetup actually exist and still meet?
 2. Is the city, coordinates, and cadence correct?
 3. Is the contact info (website, X handle, etc.) accurate?
 
-Only **Lynchburg Bitcoiners** is flagged as verified (`verified: true`) since that's Mason's local meetup.
+Two things to know about the transcription:
 
-Unverified meetups display a "Listing unverified" badge on their detail page so it's honest with visitors during the soft-launch phase. Once you verify an entry, set `verified: true` and `needsVerification: false`.
+- **Coordinates are city centers, not venues** (except PubKey, Bitcoin Park,
+  Bitcoin Commons and Georgetown Bitcoin, which have documented addresses).
+- **Cities come from the spreadsheet, which mostly reflects BTC Map pin
+  locations.** Several read as a suburb rather than the metro people would
+  search for — Bay Area Bitcoiners is filed under Tiburon, SD Bitcoiners under
+  San Diego Country Estates, DTX Bitcoiners under Fort Worth. Correct these in
+  the spreadsheet first, then re-import, so the two don't drift apart.
+
+The header comment in `data/meetups.ts` lists the handful of places where the
+raw spreadsheet value had to be adjusted to keep URLs valid.
+
+Unverified meetups display a "Listing unverified" badge on their detail page so
+it's honest with visitors during the soft-launch phase. Once you verify an
+entry, set `verified: true` and `needsVerification: false`.
 
 ## Deployment plan
 
@@ -112,7 +129,7 @@ Unverified meetups display a "Listing unverified" badge on their detail page so 
 
 Things not yet built, in recommended priority order:
 
-1. **Verify the seed data.** Go through all 54 unverified meetups. Remove dead ones, correct bad info, confirm with real sources.
+1. **Verify the seed data.** Go through all 112 unverified meetups. Remove dead ones, correct bad info, confirm with real sources.
 2. **Add more meetups.** Target 150-300 for a credible public launch. The AI-assisted city sweep approach is documented in the BIB proposal PDF.
 3. **Email submission notifications.** The `/api/submit` route currently only writes to a JSON file. Wire it to send an email to Mason when a new submission arrives (SendGrid, Resend, or Sender.net).
 4. **Postgres migration.** Replace `data/submissions.json` with a real database on Railway once submission volume grows.
