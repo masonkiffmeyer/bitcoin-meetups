@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import Link from "next/link";
 import type { Meetup } from "@/lib/types";
 import { getFreq, stateSlug, citySlug } from "@/data/meetups";
@@ -11,6 +12,23 @@ type Props = {
 
 export default function MeetupDrawer({ meetup, onClose }: Props) {
   const open = !!meetup;
+
+  // Without a scroll lock the page behind a mobile bottom sheet keeps moving
+  // under the finger, which reads as the sheet itself failing to scroll.
+  useEffect(() => {
+    if (!open) return;
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.body.style.overflow = prevOverflow;
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [open, onClose]);
+
   return (
     <>
       <div

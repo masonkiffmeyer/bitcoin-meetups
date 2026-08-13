@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { geoAlbersUsa, geoPath } from "d3-geo";
-import { feature } from "topojson-client";
+import { loadStatesGeo } from "@/lib/us-atlas";
 
 const W = 360;
 const H = 220;
@@ -21,20 +21,6 @@ const STATE_CODE_TO_FIPS: Record<string, string> = {
 
 type StatePath = { id: string; d: string };
 
-// Module-scoped cache so the topojson is fetched once and reused as the user
-// clicks between states. The main map already pulled this URL, so the second
-// component usually hits the HTTP cache anyway.
-let _cachedStates: { features: { id: string | number; properties: { name: string } }[] } | null = null;
-
-async function loadStates() {
-  if (_cachedStates) return _cachedStates;
-  const us = await fetch("https://cdn.jsdelivr.net/npm/us-atlas@3/states-10m.json").then((r) =>
-    r.json()
-  );
-  _cachedStates = feature(us as any, (us as any).objects.states) as any;
-  return _cachedStates;
-}
-
 type Props = {
   activeStateCode?: string;
   neighborCodes?: string[];
@@ -51,7 +37,7 @@ export default function MiniUSMap({ activeStateCode, neighborCodes = [] }: Props
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const states = await loadStates();
+      const states = await loadStatesGeo().catch(() => null);
       if (!states || cancelled) return;
       const projection = geoAlbersUsa().fitExtent(
         [[6, 6], [W - 6, H - 6]],

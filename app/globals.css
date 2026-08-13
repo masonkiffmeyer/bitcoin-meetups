@@ -1,11 +1,15 @@
-@import url('https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500&family=Instrument+Serif:ital@0;1&display=swap');
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
   color-scheme: light;
+
+  /* Typefaces — the --font-* vars are injected by next/font in app/layout.tsx.
+     The stacks below keep the site readable if a font file fails to load. */
+  --font-sans:  var(--font-geist), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono:  var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
+  --font-serif: var(--font-instrument-serif), Georgia, "Times New Roman", serif;
 
   /* Surfaces */
   --bg:           #FFFFFF;
@@ -61,32 +65,71 @@ html, body {
   padding: 0;
   background: var(--bg);
   color: var(--ink);
-  font-family: "Geist", -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--font-sans);
   font-feature-settings: "ss01", "cv11";
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+  /* Nothing on this site is meant to scroll sideways; a single wide table or
+     long URL used to drag the whole page off-axis on a phone. */
+  overflow-x: hidden;
+  /* Stop iOS from inflating type when the device is rotated to landscape. */
+  -webkit-text-size-adjust: 100%;
 }
+
+html { scroll-behavior: smooth; }
+
+/* Anchored jumps clear the sticky nav instead of hiding under it. */
+:target { scroll-margin-top: 96px; }
 
 a { color: inherit; text-decoration: none; }
 
+img, svg, video { max-width: 100%; }
+
+/* Long meetup names, venue strings and pasted URLs must wrap rather than
+   force a horizontal scrollbar inside their card. */
+h1, h2, h3, h4, p, a, span, li { overflow-wrap: anywhere; }
+
+/* Touch devices get no persistent hover state, and a tap should not leave a
+   grey flash box behind. */
+@media (hover: none) {
+  * { -webkit-tap-highlight-color: transparent; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Keyboard/switch users need a visible focus ring; the design removes outlines
+   in several places, so restore one globally for keyboard focus only. */
+:focus-visible {
+  outline: 2px solid var(--orange);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
 /* ============ TYPE PRIMITIVES ============ */
-.mono { font-family: "Geist Mono", ui-monospace, monospace; }
-.serif { font-family: "Instrument Serif", Georgia, serif; }
+.mono { font-family: var(--font-mono); }
+.serif { font-family: var(--font-serif); }
 .serif-italic {
-  font-family: "Instrument Serif", Georgia, serif;
+  font-family: var(--font-serif);
   font-style: italic;
   font-weight: 400;
   letter-spacing: 0;
 }
 .eyebrow {
-  font-family: "Geist Mono", monospace;
+  font-family: var(--font-mono);
   font-size: 11px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--ink-muted);
 }
 .eyebrow-orange {
-  font-family: "Geist Mono", monospace;
+  font-family: var(--font-mono);
   font-size: 11px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -223,10 +266,123 @@ a { color: inherit; text-decoration: none; }
   background: var(--orange-soft);
 }
 
+/* Hamburger — hidden on desktop, the only way into the nav on a phone. */
+.bib-burger {
+  display: none;
+  background: transparent;
+  border: 1px solid var(--orange);
+  border-radius: 10px;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  cursor: pointer;
+  place-items: center;
+  flex-shrink: 0;
+  /* The scrim is a child of the nav, so it needs to be lifted above it inside
+     the nav's own stacking context — otherwise the scrim swallows the tap
+     that is supposed to close the menu. */
+  position: relative;
+  z-index: 60;
+}
+.bib-burger-bars {
+  display: grid;
+  gap: 4px;
+  width: 18px;
+}
+.bib-burger-bars span {
+  display: block;
+  height: 1.5px;
+  width: 100%;
+  background: var(--orange);
+  border-radius: 2px;
+  transition: transform 0.2s ease, opacity 0.15s ease;
+}
+.bib-burger-bars.is-open span:nth-child(1) { transform: translateY(5.5px) rotate(45deg); }
+.bib-burger-bars.is-open span:nth-child(2) { opacity: 0; }
+.bib-burger-bars.is-open span:nth-child(3) { transform: translateY(-5.5px) rotate(-45deg); }
+
+.bib-mobile-scrim {
+  display: none;
+  /* Anchored just below the sticky nav rather than over the whole viewport,
+     so the bar itself — logo included — stays crisp while the sheet is open. */
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  height: 100dvh;
+  background: rgba(21, 17, 14, 0.35);
+  z-index: 40;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+.bib-mobile-scrim.open { opacity: 1; pointer-events: auto; }
+
+.bib-mobile-menu {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: #FFFFFF;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  box-shadow: var(--shadow-md);
+  padding: 8px 20px calc(16px + env(safe-area-inset-bottom));
+  flex-direction: column;
+  z-index: 55;
+  max-height: calc(100dvh - 100%);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.bib-mobile-link {
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-style: italic;
+  font-size: 18px;
+  color: var(--orange);
+  /* 48px of vertical room keeps every item comfortably above the 44px
+     minimum touch target. */
+  padding: 14px 4px;
+  border-bottom: 1px solid var(--line-soft);
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+}
+.bib-mobile-link.active {
+  text-decoration: underline;
+  text-underline-offset: 6px;
+  text-decoration-thickness: 1.5px;
+}
+.bib-mobile-donate {
+  margin-top: 16px;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-style: italic;
+  font-size: 18px;
+  color: #FFFFFF;
+  background: var(--orange);
+  border: 1.5px solid var(--orange);
+  border-radius: 999px;
+  padding: 13px 28px;
+  text-align: center;
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 @media (max-width: 900px) {
-  .bib-nav { padding: 14px 20px; gap: 12px; }
+  .bib-nav { padding: 8px 14px; gap: 12px; }
   .bib-nav-links { display: none; }
-  .bib-logo-img { height: 36px; }
+  .bib-logo-img { height: 34px; }
+  /* Pad the logo out to a 44px-tall target without growing the artwork. */
+  .bib-logo { padding: 6px 4px; }
+  .bib-nav-right { gap: 12px; }
+  .bib-burger { display: grid; }
+  .bib-mobile-scrim { display: block; }
+  .bib-mobile-menu.open { display: flex; }
+  /* The pill duplicates the one inside the sheet and crowds the logo on a
+     narrow phone. */
+  .bib-donate { display: none; }
 }
 
 /* ============ (legacy) TOP NAV ============ */
@@ -246,7 +402,7 @@ a { color: inherit; text-decoration: none; }
   display: flex;
   align-items: center;
   gap: 10px;
-  font-family: "Geist", sans-serif;
+  font-family: var(--font-sans);
   font-size: 16px;
   font-weight: 600;
   letter-spacing: -0.005em;
@@ -264,7 +420,7 @@ a { color: inherit; text-decoration: none; }
   display: grid; place-items: center;
   font-size: 14px; font-weight: 700;
   color: #FFFFFF;
-  font-family: "Geist Mono", monospace;
+  font-family: var(--font-mono);
 }
 .nav-links {
   display: flex;
@@ -289,7 +445,7 @@ a { color: inherit; text-decoration: none; }
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-family: "Geist Mono", monospace;
+  font-family: var(--font-mono);
   font-size: 11px;
   color: var(--ink-muted);
   letter-spacing: 0.04em;
@@ -301,7 +457,7 @@ a { color: inherit; text-decoration: none; }
   align-items: center;
   gap: 8px;
   padding: 10px 18px;
-  font-family: "Geist", sans-serif;
+  font-family: var(--font-sans);
   font-size: 13px;
   font-weight: 500;
   border: 1px solid var(--ink);
@@ -333,6 +489,22 @@ a { color: inherit; text-decoration: none; }
   font-weight: 600;
 }
 .btn-dark:hover { background: #000; border-color: #000; }
+
+/* Every button-ish control clears the 44px minimum touch target on phones. */
+@media (max-width: 900px) {
+  .btn {
+    min-height: 46px;
+    padding: 12px 20px;
+    font-size: 14px;
+  }
+  .chip {
+    min-height: 40px;
+    padding: 9px 16px;
+    font-size: 11px;
+  }
+  .btn-on-orange,
+  .btn-on-orange-ghost { min-height: 48px; display: inline-flex; align-items: center; }
+}
 
 /* ============ HERO / TITLEBAR ============ */
 .hero { border-bottom: 1px solid var(--line); }
@@ -380,7 +552,7 @@ a { color: inherit; text-decoration: none; }
   max-width: 16ch;
 }
 .hero-title em {
-  font-family: "Instrument Serif", Georgia, serif;
+  font-family: var(--font-serif);
   font-style: italic;
   font-weight: 400;
   color: var(--orange-deep);
@@ -394,7 +566,7 @@ a { color: inherit; text-decoration: none; }
   max-width: 52ch;
 }
 .hero-sub em {
-  font-family: "Instrument Serif", Georgia, serif;
+  font-family: var(--font-serif);
   font-style: italic;
   font-weight: 400;
   letter-spacing: 0;
@@ -433,7 +605,7 @@ a { color: inherit; text-decoration: none; }
   display: block;
 }
 .stat-strip-label {
-  font-family: "Geist Mono", monospace;
+  font-family: var(--font-mono);
   font-size: 11px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -446,6 +618,21 @@ a { color: inherit; text-decoration: none; }
   align-items: center;
   gap: 8px;
   border-left-color: var(--green-live);
+}
+
+/* Five flex cells wrapping at 160px each produced a ragged 2-1-2 stack with
+   an orphan on a phone; a fixed 2-up grid reads as a table instead. */
+@media (max-width: 640px) {
+  .stat-strip {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px 14px;
+    padding: 20px 18px;
+  }
+  .stat-strip-cell { padding-left: 12px; }
+  .stat-strip-num { font-size: 24px; }
+  .stat-strip-label { font-size: 10px; }
+  .stat-strip-live { grid-column: 1 / -1; justify-content: flex-start; }
 }
 .stat-strip-live .stat-strip-label { color: var(--green-live); }
 .live-dot {
@@ -462,6 +649,12 @@ a { color: inherit; text-decoration: none; }
   height: clamp(560px, 70vh, 820px);
   overflow: hidden;
   background: var(--bg);
+}
+/* A 560px-tall map is most of a phone screen and pushes the directory below
+   two full scrolls; the US is wider than it is tall, so a shorter stage also
+   wastes less space now that the projection is no longer stretched. */
+@media (max-width: 700px) {
+  .hero-stage { height: clamp(300px, 46vh, 420px); }
 }
 .hero-map-wrap {
   position: absolute;
@@ -493,7 +686,7 @@ a { color: inherit; text-decoration: none; }
   border: 1px solid var(--line);
   border-radius: 10px;
   padding: 10px 14px;
-  font-family: "Geist Mono", monospace;
+  font-family: var(--font-mono);
   font-size: 10px;
   color: var(--ink-muted);
   letter-spacing: 0.06em;
@@ -533,7 +726,7 @@ a { color: inherit; text-decoration: none; }
   outline: none;
   padding: 12px 12px;
   color: var(--ink);
-  font-family: "Geist", sans-serif;
+  font-family: var(--font-sans);
   font-size: 15px;
   min-width: 0;
 }
@@ -547,7 +740,7 @@ a { color: inherit; text-decoration: none; }
   border: 0;
   outline: none;
   color: var(--ink-soft);
-  font-family: "Geist", sans-serif;
+  font-family: var(--font-sans);
   font-size: 13px;
   padding: 8px 12px;
   border-radius: 8px;
@@ -566,6 +759,33 @@ a { color: inherit; text-decoration: none; }
   white-space: nowrap;
 }
 .hero-search-toggle input { accent-color: var(--orange); }
+
+/* The search row is a fixed 56px bar with an input and a state <select>
+   competing for width; below ~640px that leaves the input a couple of
+   characters wide, so the two controls stack instead. */
+@media (max-width: 640px) {
+  .hero-search {
+    flex-direction: column;
+    align-items: stretch;
+    height: auto;
+    padding: 6px;
+    gap: 6px;
+  }
+  .hero-search-input {
+    padding: 13px 10px;
+    /* iOS zooms the whole page when a focused field is under 16px. */
+    font-size: 16px;
+    min-height: 48px;
+  }
+  .hero-search-divider { display: none; }
+  .hero-search-select {
+    margin: 0;
+    width: 100%;
+    font-size: 16px;
+    min-height: 48px;
+    padding: 12px;
+  }
+}
 
 /* ============ MAP POPUP ============ */
 .map-popup {
@@ -617,7 +837,7 @@ a { color: inherit; text-decoration: none; }
   margin-bottom: 10px;
 }
 .map-popup-tag {
-  font-family: "Geist Mono", monospace;
+  font-family: var(--font-mono);
   font-size: 10px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -647,7 +867,7 @@ a { color: inherit; text-decoration: none; }
   margin-bottom: 10px;
 }
 .map-popup-coords {
-  font-family: "Geist Mono", monospace;
+  font-family: var(--font-mono);
   font-size: 10px;
   letter-spacing: 0.06em;
   color: var(--ink-muted);
@@ -661,6 +881,33 @@ a { color: inherit; text-decoration: none; }
 }
 .map-popup-actions .btn { flex: 1; justify-content: center; font-size: 12px; padding: 9px 12px; }
 
+/* On a phone the bubble is pinned to the bottom of the screen as a sheet —
+   an anchored 320px popup would overflow the viewport for any pin near an
+   edge, and there is no room above a pin in the top row either. */
+.map-popup-sheet {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  top: auto;
+  width: auto;
+  transform: none;
+  border-radius: 16px 16px 0 0;
+  border: 1px solid var(--line-strong);
+  border-bottom: none;
+  padding: 20px 20px calc(20px + env(safe-area-inset-bottom));
+  box-shadow: 0 -8px 40px rgba(21, 17, 14, 0.16);
+  animation: sheetIn 0.22s cubic-bezier(0.2, 0.8, 0.2, 1);
+  z-index: 90;
+}
+.map-popup-sheet::after { display: none; }
+.map-popup-sheet .map-popup-close { width: 40px; height: 40px; font-size: 22px; }
+.map-popup-sheet .map-popup-actions .btn { min-height: 48px; font-size: 14px; }
+@keyframes sheetIn {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
 .map-loading {
   position: absolute;
   inset: 0;
@@ -670,7 +917,10 @@ a { color: inherit; text-decoration: none; }
   font-size: 11px;
   letter-spacing: 0.14em;
   pointer-events: none;
+  padding: 0 24px;
+  text-align: center;
 }
+.map-loading-error { color: var(--ink-soft); }
 
 /* ============ SECTIONS ============ */
 .section {
@@ -699,7 +949,7 @@ a { color: inherit; text-decoration: none; }
   color: var(--ink);
 }
 .section-title em {
-  font-family: "Instrument Serif", Georgia, serif;
+  font-family: var(--font-serif);
   font-style: italic;
   font-weight: 400;
   color: var(--orange-deep);
@@ -707,7 +957,7 @@ a { color: inherit; text-decoration: none; }
 }
 .section-title .count {
   color: var(--ink-muted);
-  font-family: "Geist Mono", monospace;
+  font-family: var(--font-mono);
   font-size: 14px;
   letter-spacing: 0.05em;
   margin-left: 16px;
@@ -735,7 +985,7 @@ a { color: inherit; text-decoration: none; }
   padding: 7px 14px;
   border: 1px solid var(--line);
   border-radius: 999px;
-  font-family: "Geist Mono", monospace;
+  font-family: var(--font-mono);
   font-size: 11px;
   letter-spacing: 0.06em;
   color: var(--ink-soft);
@@ -761,7 +1011,7 @@ a { color: inherit; text-decoration: none; }
   gap: 6px;
   padding: 4px 10px;
   border-radius: 999px;
-  font-family: "Geist Mono", monospace;
+  font-family: var(--font-mono);
   font-size: 11px;
   font-weight: 500;
   letter-spacing: 0.04em;
@@ -792,7 +1042,7 @@ a { color: inherit; text-decoration: none; }
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-family: "Geist Mono", monospace;
+  font-family: var(--font-mono);
   font-size: 10px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -810,7 +1060,7 @@ a { color: inherit; text-decoration: none; }
 }
 
 .mcard-tag {
-  font-family: "Geist Mono", monospace;
+  font-family: var(--font-mono);
   font-size: 10px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -868,7 +1118,7 @@ a { color: inherit; text-decoration: none; }
 .drow-city { font-size: 13px; color: var(--orange-deep); }
 .drow-cadence { font-size: 12px; color: var(--ink-soft); }
 .drow-link {
-  font-family: "Geist Mono", monospace;
+  font-family: var(--font-mono);
   font-size: 11px;
   color: var(--ink-muted);
   text-align: right;
@@ -886,7 +1136,7 @@ a { color: inherit; text-decoration: none; }
 }
 .drow-head:hover { background: transparent; padding-left: 8px; }
 .drow-head > * {
-  font-family: "Geist Mono", monospace;
+  font-family: var(--font-mono);
   font-size: 9px !important;
   letter-spacing: 0.14em;
   text-transform: uppercase;
@@ -911,7 +1161,7 @@ a { color: inherit; text-decoration: none; }
   border-bottom: 1px solid var(--line);
 }
 .dir-state-name {
-  font-family: "Geist", sans-serif;
+  font-family: var(--font-sans);
   font-size: 16px;
   font-weight: 600;
   letter-spacing: -0.005em;
@@ -919,7 +1169,7 @@ a { color: inherit; text-decoration: none; }
 }
 .dir-state-name:hover { color: var(--orange-deep); }
 .dir-state-count {
-  font-family: "Geist Mono", monospace;
+  font-family: var(--font-mono);
   font-size: 11px;
   letter-spacing: 0.06em;
   color: var(--ink-muted);
@@ -946,9 +1196,13 @@ a { color: inherit; text-decoration: none; }
   background: var(--bg-tint);
   display: flex;
   flex-direction: column;
+  /* Grid items default to min-width:auto, so a wide child (the horizontal
+     state rail on mobile, a long meetup name anywhere) stretches the whole
+     grid past the viewport instead of scrolling or wrapping inside it. */
+  min-width: 0;
 }
 .dir-index-aside-head {
-  font-family: "Geist Mono", monospace;
+  font-family: var(--font-mono);
   font-size: 11px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -990,7 +1244,7 @@ a { color: inherit; text-decoration: none; }
   font-weight: 500;
 }
 .dir-index-state-count {
-  font-family: "Geist Mono", monospace;
+  font-family: var(--font-mono);
   font-size: 11px;
   color: var(--ink-muted);
 }
@@ -1000,6 +1254,7 @@ a { color: inherit; text-decoration: none; }
   background: var(--bg);
   display: flex;
   flex-direction: column;
+  min-width: 0;
 }
 .dir-index-head {
   display: flex;
@@ -1016,7 +1271,7 @@ a { color: inherit; text-decoration: none; }
   color: var(--ink);
 }
 .dir-index-sub {
-  font-family: "Geist Mono", monospace;
+  font-family: var(--font-mono);
   font-size: 11px;
   letter-spacing: 0.08em;
   color: var(--ink-muted);
@@ -1027,7 +1282,7 @@ a { color: inherit; text-decoration: none; }
 .dir-index-rows .drow:last-child { border-bottom: none; }
 
 .dir-index-code {
-  font-family: "Geist Mono", monospace;
+  font-family: var(--font-mono);
   font-size: 11px;
   letter-spacing: 0.12em;
   color: var(--ink-muted);
@@ -1050,7 +1305,7 @@ a { color: inherit; text-decoration: none; }
   padding: 0 0 8px;
 }
 .dir-nearby-eyebrow {
-  font-family: "Geist Mono", monospace;
+  font-family: var(--font-mono);
   font-size: 10px;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -1058,7 +1313,7 @@ a { color: inherit; text-decoration: none; }
   font-weight: 500;
 }
 .dir-nearby-sub {
-  font-family: "Geist Mono", monospace;
+  font-family: var(--font-mono);
   font-size: 10px;
   letter-spacing: 0.04em;
   color: var(--ink-muted);
@@ -1077,7 +1332,7 @@ a { color: inherit; text-decoration: none; }
   color: var(--ink-soft);
 }
 .dir-nearby-state-count {
-  font-family: "Geist Mono", monospace;
+  font-family: var(--font-mono);
   font-size: 10px;
   letter-spacing: 0.06em;
   color: var(--ink-muted);
@@ -1106,14 +1361,14 @@ a { color: inherit; text-decoration: none; }
   justify-content: space-between;
 }
 .dir-index-mini-label {
-  font-family: "Geist Mono", monospace;
+  font-family: var(--font-mono);
   font-size: 10px;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--ink-muted);
 }
 .dir-index-mini-coord {
-  font-family: "Geist Mono", monospace;
+  font-family: var(--font-mono);
   font-size: 10px;
   color: var(--ink-muted);
   letter-spacing: 0.04em;
@@ -1126,7 +1381,7 @@ a { color: inherit; text-decoration: none; }
 .dir-index-mini-legend {
   display: flex;
   gap: 16px;
-  font-family: "Geist Mono", monospace;
+  font-family: var(--font-mono);
   font-size: 10px;
   color: var(--ink-muted);
   letter-spacing: 0.04em;
@@ -1159,7 +1414,7 @@ a { color: inherit; text-decoration: none; }
   overflow: hidden;
 }
 .dir-index-cta-eyebrow {
-  font-family: "Geist Mono", monospace;
+  font-family: var(--font-mono);
   font-size: 10px;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -1180,26 +1435,87 @@ a { color: inherit; text-decoration: none; }
 }
 
 @media (max-width: 800px) {
+  /* Squeezing five columns into a phone width left every cell truncated.
+     Stack the row instead: marker in a fixed gutter, then name / city /
+     cadence down the right-hand column. */
   .drow {
-    grid-template-columns: 8px 1fr 1fr;
-    gap: 12px;
+    grid-template-columns: 8px 1fr;
+    grid-template-areas:
+      "marker name"
+      ".      city"
+      ".      cadence";
+    gap: 3px 12px;
+    align-items: start;
+    padding: 14px 12px 14px 8px;
+    min-height: 56px;
   }
   .drow.drow-no-city {
     grid-template-columns: 8px 1fr;
+    grid-template-areas:
+      "marker name"
+      ".      cadence";
   }
-  .drow-cadence, .drow-link { display: none; }
+  .drow-marker { grid-area: marker; margin-top: 7px; }
+  .drow-name { grid-area: name; font-size: 15px; line-height: 1.3; }
+  .drow-city { grid-area: city; }
+  .drow-cadence { grid-area: cadence; font-size: 12px; color: var(--ink-muted); }
+  /* The bare hostname is the least useful field on a phone and the row is a
+     button that opens the full record anyway. */
+  .drow-link { display: none; }
   .drow-head { display: none; }
-  .dir-index { grid-template-columns: 1fr; }
+  .drow:hover { padding-left: 8px; }
+
+  .dir-index { grid-template-columns: 1fr; min-height: 0; }
+  /* A 200px scroll box hides the state list behind a nested scroll on a
+     phone. A swipeable chip rail keeps every state one gesture away. */
   .dir-index-aside {
     border-right: none;
     border-bottom: 1px solid var(--line);
-    max-height: 200px;
+    max-height: none;
   }
+  .dir-index-aside-head { padding: 12px 16px 8px; }
+  .dir-index-list {
+    display: flex;
+    flex-direction: row;
+    gap: 8px;
+    padding: 0 16px 14px;
+    min-width: 0;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-snap-type: x proximity;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .dir-index-list::-webkit-scrollbar { display: none; }
+  .dir-index-list > li { flex: 0 0 auto; scroll-snap-align: start; }
+  .dir-index-state {
+    width: auto;
+    gap: 8px;
+    padding: 10px 14px;
+    min-height: 44px;
+    border: 1px solid var(--line);
+    border-left: 1px solid var(--line);
+    border-radius: 999px;
+    background: var(--bg);
+    white-space: nowrap;
+  }
+  .dir-index-state.is-active {
+    border-color: var(--orange);
+    border-left-color: var(--orange);
+    background: var(--orange-soft);
+  }
+  .dir-index-head { padding: 18px 18px 14px; }
+  .dir-index-title { font-size: 22px; }
+  .dir-index-rows { padding: 4px 10px 12px; }
+  .dir-nearby { margin: 4px 10px 12px; }
   .dir-index-footer { grid-template-columns: 1fr; }
   .dir-index-mini-wrap {
     border-right: none;
     border-bottom: 1px solid var(--line);
+    padding: 16px 18px;
   }
+  .dir-index-cta { padding: 20px 18px; }
+  .dir-index-cta .btn { min-height: 46px; }
 }
 
 /* ============ CTA STRIP — full-width orange band ============ */
@@ -1219,7 +1535,7 @@ a { color: inherit; text-decoration: none; }
   flex-wrap: wrap;
 }
 .cta-band-eyebrow {
-  font-family: "Geist Mono", monospace;
+  font-family: var(--font-mono);
   font-size: 11px;
   letter-spacing: 0.1em;
   opacity: 0.85;
@@ -1232,7 +1548,7 @@ a { color: inherit; text-decoration: none; }
   margin: 6px 0 0;
 }
 .cta-band-title em {
-  font-family: "Instrument Serif", Georgia, serif;
+  font-family: var(--font-serif);
   font-style: italic;
   font-weight: 400;
   letter-spacing: 0;
@@ -1299,7 +1615,7 @@ a { color: inherit; text-decoration: none; }
   align-items: center;
   gap: 10px;
   margin-bottom: 14px;
-  font-family: "Geist", sans-serif;
+  font-family: var(--font-sans);
   font-size: 15px;
   font-weight: 600;
   letter-spacing: -0.005em;
@@ -1313,13 +1629,13 @@ a { color: inherit; text-decoration: none; }
   margin: 0 0 18px;
 }
 .footer-desc em {
-  font-family: "Instrument Serif", Georgia, serif;
+  font-family: var(--font-serif);
   font-style: italic;
   font-weight: 400;
   color: var(--ink);
 }
 .footer-col h4 {
-  font-family: "Geist Mono", monospace;
+  font-family: var(--font-mono);
   font-size: 11px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -1331,6 +1647,28 @@ a { color: inherit; text-decoration: none; }
 .footer-col a { font-size: 14px; color: var(--ink-soft); }
 .footer-col a:hover { color: var(--orange-deep); }
 
+/* Footer links sat at 18px tall in a 10px-gapped stack — easy to mis-tap. */
+@media (max-width: 900px) {
+  .footer-col ul { gap: 2px; }
+  .footer-col a {
+    display: flex;
+    align-items: center;
+    min-height: 44px;
+    font-size: 15px;
+  }
+  /* Standalone "back to …" and "claim this listing" links are targets in
+     their own right, not inline prose, so they get real height too.
+     Breadcrumb links stay inline — they're part of a sentence-like trail and
+     stretching them would break the slash separators. */
+  .tail a,
+  .info-card-link {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+  }
+  .breadcrumb { font-size: 12px; line-height: 2; }
+}
+
 .footer-bottom {
   max-width: 1400px;
   margin: 0 auto;
@@ -1338,7 +1676,7 @@ a { color: inherit; text-decoration: none; }
   border-top: 1px solid var(--line);
   display: flex;
   justify-content: space-between;
-  font-family: "Geist Mono", monospace;
+  font-family: var(--font-mono);
   font-size: 11px;
   color: var(--ink-muted);
   letter-spacing: 0.06em;
@@ -1362,8 +1700,12 @@ a { color: inherit; text-decoration: none; }
   position: fixed;
   top: 0; right: 0;
   height: 100vh;
+  /* dvh tracks the collapsing browser chrome on mobile Safari/Chrome, so the
+     drawer footer isn't cut off behind the URL bar. */
+  height: 100dvh;
   width: 480px;
   max-width: 100vw;
+  overscroll-behavior: contain;
   background: var(--bg);
   border-left: 1px solid var(--line);
   z-index: 101;
@@ -1415,7 +1757,7 @@ a { color: inherit; text-decoration: none; }
   gap: 12px;
 }
 .drawer-row .k {
-  font-family: "Geist Mono", monospace;
+  font-family: var(--font-mono);
   font-size: 10px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -1441,12 +1783,42 @@ a { color: inherit; text-decoration: none; }
 }
 
 .drawer-cta-hint {
-  font-family: "Geist Mono", monospace;
+  font-family: var(--font-mono);
   font-size: 11px;
   color: var(--ink-muted);
   text-align: center;
   margin-top: 12px;
   letter-spacing: 0.04em;
+}
+
+/* Below 640px the drawer becomes a bottom sheet: a side panel that covers the
+   full width reads as a broken page transition, and a sheet is the gesture
+   people expect from a map pin on a phone. */
+@media (max-width: 640px) {
+  .drawer {
+    top: auto;
+    bottom: 0;
+    right: 0;
+    left: 0;
+    width: 100%;
+    height: auto;
+    max-height: 88dvh;
+    border-left: none;
+    border-top: 1px solid var(--line);
+    border-radius: 18px 18px 0 0;
+    transform: translateY(100%);
+    box-shadow: 0 -12px 40px rgba(21, 17, 14, 0.16);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .drawer.open { transform: translateY(0); }
+  .drawer-head { padding: 16px 20px; }
+  .drawer-close { width: 44px; height: 44px; }
+  .drawer-hero { padding: 20px 20px 18px; }
+  .drawer-name { font-size: 26px; }
+  .drawer-loc { font-size: 15px; }
+  .drawer-body { padding: 20px 20px 28px; }
+  .drawer-row { grid-template-columns: 1fr; gap: 4px; padding: 12px 0; }
+  .drawer-actions .btn { flex: 1; justify-content: center; min-height: 48px; }
 }
 
 /* ============ EMPTY STATE ============ */
@@ -1520,6 +1892,29 @@ textarea.field {
   margin: 32px 0;
 }
 
+/* Any field under 16px makes iOS Safari zoom the page on focus and never zoom
+   back out — the single most common complaint about mobile forms. */
+@media (max-width: 900px) {
+  .field {
+    font-size: 16px;
+    padding: 13px 14px;
+    min-height: 48px;
+  }
+  textarea.field { min-height: 120px; }
+  .field-check {
+    min-height: 44px;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  .field-check input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+    margin-top: 2px;
+    flex-shrink: 0;
+  }
+  .cadence-filter label { min-height: 44px; }
+}
+
 /* ============ ALERTS ============ */
 .alert-error {
   border: 1px solid var(--red-line);
@@ -1586,7 +1981,7 @@ textarea.field {
 
 /* Breadcrumb (eyebrow-style) — used at the top of sub-pages */
 .breadcrumb {
-  font-family: "Geist Mono", monospace;
+  font-family: var(--font-mono);
   font-size: 11px;
   letter-spacing: 0.06em;
   color: var(--ink-muted);
@@ -1618,7 +2013,7 @@ textarea.field {
   color: #FFFFFF;
   display: grid;
   place-items: center;
-  font-family: "Geist Mono", monospace;
+  font-family: var(--font-mono);
   font-size: 22px;
   font-weight: 600;
   letter-spacing: 0.02em;
@@ -1656,7 +2051,7 @@ textarea.field {
   font-feature-settings: "tnum";
 }
 .stat-block-label {
-  font-family: "Geist Mono", monospace;
+  font-family: var(--font-mono);
   font-size: 11px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -1680,7 +2075,7 @@ textarea.field {
   position: absolute;
   top: 14px;
   left: 16px;
-  font-family: "Geist Mono", monospace;
+  font-family: var(--font-mono);
   font-size: 10px;
   letter-spacing: 0.06em;
   color: var(--ink-muted);
@@ -1689,7 +2084,7 @@ textarea.field {
   position: absolute;
   bottom: 14px;
   right: 16px;
-  font-family: "Geist Mono", monospace;
+  font-family: var(--font-mono);
   font-size: 10px;
   letter-spacing: 0.06em;
   color: var(--ink-muted);
@@ -1710,6 +2105,22 @@ textarea.field {
 @media (max-width: 900px) {
   .page-hero { grid-template-columns: 1fr; gap: 32px; }
   .geo-panel { height: 280px; }
+  /* Sticky at top:96px is dead weight once the sidebar is stacked above the
+     content rather than beside it. */
+  .state-sidebar { position: static; }
+}
+@media (max-width: 640px) {
+  .page-hero { gap: 24px; }
+  .page-hero-badge { width: 48px; height: 48px; font-size: 17px; border-radius: 11px; }
+  .page-hero-titleblock { gap: 12px; margin-bottom: 18px; }
+  /* The badge takes 60px out of a 360px screen, so the 40px hero size leaves
+     the state name breaking mid-phrase. */
+  .page-hero-titleblock .hero-title { font-size: clamp(26px, 7.5vw, 40px); }
+  .page-hero-desc { font-size: 15px; margin-bottom: 22px; }
+  .page-hero-actions .btn { flex: 1 1 auto; justify-content: center; }
+  .geo-panel { height: 220px; }
+  .stat-row { grid-template-columns: 1fr 1fr; gap: 18px 14px; }
+  .stat-block-num { font-size: 26px; }
 }
 
 /* ============ DARK STATS BAND (city quick-facts) ============ */
@@ -1740,14 +2151,14 @@ textarea.field {
   color: var(--bg);
 }
 .dark-stat-label {
-  font-family: "Geist Mono", monospace;
+  font-family: var(--font-mono);
   font-size: 11px;
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: rgba(255, 255, 255, 0.6);
 }
 .dark-stats-live {
-  font-family: "Geist Mono", monospace;
+  font-family: var(--font-mono);
   font-size: 11px;
   letter-spacing: 0.1em;
   color: var(--orange);
@@ -1761,6 +2172,20 @@ textarea.field {
   .dark-stats-band { margin: 0 -24px; padding: 18px 24px; }
   .dark-stats-band-inner { gap: 18px; }
   .dark-stat-num { font-size: 24px; }
+}
+/* Flex-wrapping four stats with `justify-content: space-between` left the last
+   row stretched edge to edge with a hole in the middle. */
+@media (max-width: 640px) {
+  .dark-stats-band { margin: 0 -18px; padding: 18px; }
+  .dark-stats-band-inner {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px 12px;
+  }
+  .dark-stat { flex-direction: column; align-items: flex-start; gap: 2px; }
+  .dark-stat-num { font-size: 22px; }
+  .dark-stat-label { font-size: 10px; }
+  .dark-stats-live { grid-column: 1 / -1; }
 }
 
 /* ============ MEETUP CARD (city page grid) ============ */
@@ -1809,7 +2234,7 @@ textarea.field {
 }
 .meetup-card-venue .muted { color: var(--ink-muted); }
 .meetup-card-meta {
-  font-family: "Geist Mono", monospace;
+  font-family: var(--font-mono);
   font-size: 10px;
   color: var(--ink-muted);
   text-align: right;
@@ -1820,7 +2245,7 @@ textarea.field {
 .meetup-card-meta strong {
   display: block;
   color: var(--ink);
-  font-family: "Geist", sans-serif;
+  font-family: var(--font-sans);
   font-weight: 500;
   font-size: 13px;
   letter-spacing: -0.005em;
@@ -1853,7 +2278,7 @@ textarea.field {
   gap: 2px;
 }
 .meetup-card-foot-cell .k {
-  font-family: "Geist Mono", monospace;
+  font-family: var(--font-mono);
   font-size: 10px;
   letter-spacing: 0.06em;
   color: var(--ink-muted);
@@ -1879,7 +2304,7 @@ textarea.field {
 }
 .state-sidebar { position: sticky; top: 96px; align-self: start; }
 .state-sidebar h3 {
-  font-family: "Geist Mono", monospace;
+  font-family: var(--font-mono);
   font-size: 11px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -1913,7 +2338,7 @@ textarea.field {
   font-weight: 500;
 }
 .state-city-link .count {
-  font-family: "Geist Mono", monospace;
+  font-family: var(--font-mono);
   font-size: 11px;
   color: var(--ink-muted);
 }
@@ -1969,7 +2394,7 @@ textarea.field {
   margin-bottom: 24px;
 }
 .state-main-sort {
-  font-family: "Geist Mono", monospace;
+  font-family: var(--font-mono);
   font-size: 12px;
   color: var(--ink-muted);
   letter-spacing: 0.04em;
@@ -1989,7 +2414,7 @@ textarea.field {
   padding: 12px 20px;
   border-bottom: 1px solid var(--line);
   background: var(--bg-tint);
-  font-family: "Geist Mono", monospace;
+  font-family: var(--font-mono);
   font-size: 11px;
   color: var(--ink-muted);
   letter-spacing: 0.06em;
@@ -2035,9 +2460,9 @@ textarea.field {
   text-overflow: ellipsis;
 }
 .meetup-table-city { font-size: 14px; color: var(--ink-soft); }
-.meetup-table-cadence { font-family: "Geist Mono", monospace; font-size: 12px; color: var(--ink-soft); }
+.meetup-table-cadence { font-family: var(--font-mono); font-size: 12px; color: var(--ink-soft); }
 .meetup-table-attend {
-  font-family: "Geist Mono", monospace;
+  font-family: var(--font-mono);
   font-size: 13px;
   color: var(--ink);
   text-align: right;
@@ -2048,8 +2473,18 @@ textarea.field {
   .meetup-table-row {
     grid-template-columns: 1fr auto;
     padding: 14px 16px;
+    min-height: 60px;
   }
-  .meetup-table-city, .meetup-table-cadence, .meetup-table-attend { display: none; }
+  .meetup-table-city, .meetup-table-attend { display: none; }
+  /* Cadence text moves under the name rather than disappearing — it's the
+     detail people scan for, and the row has vertical room for it. */
+  .meetup-table-cadence {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    font-size: 11px;
+    color: var(--ink-muted);
+  }
+  .meetup-table-name-text { font-size: 15px; }
 }
 
 /* ============ MEETUP DETAIL PAGE ============ */
@@ -2106,11 +2541,11 @@ textarea.field {
   letter-spacing: -0.025em;
   line-height: 1;
   color: var(--orange-deep);
-  font-family: "Instrument Serif", Georgia, serif;
+  font-family: var(--font-serif);
   font-style: italic;
 }
 .meetup-next-card-when {
-  font-family: "Geist Mono", monospace;
+  font-family: var(--font-mono);
   font-size: 13px;
   color: var(--ink-soft);
   margin-top: 6px;
@@ -2153,7 +2588,7 @@ textarea.field {
 @media (max-width: 900px) {
   .hero-titlebar-inner { grid-template-columns: 1fr; gap: 28px; padding: 40px 24px 28px; }
   .stat-strip { padding: 24px; gap: 20px; }
-  .footer-inner { grid-template-columns: 1fr 1fr; padding: 48px 24px 24px; }
+  .footer-inner { grid-template-columns: 1fr 1fr; padding: 48px 24px 24px; gap: 32px; }
   .footer-bottom { padding: 20px 24px 24px; }
   .map-legend { font-size: 9px; gap: 12px; padding: 8px 10px; }
   .map-legend .legend-hint { display: none; }
@@ -2161,6 +2596,43 @@ textarea.field {
   .nav-links { display: none; }
   .section { padding: 56px 24px; }
   .cta-band-inner { padding: 32px 24px; }
+  .section-title { font-size: 28px; }
+  .section-title .count { display: block; margin: 8px 0 0; }
+  .section-head { margin-bottom: 24px; gap: 18px; }
+  .meetup-card { padding: 20px; }
+  .meetup-card-title { font-size: 19px; }
+  .cta-strip { grid-template-columns: 1fr; gap: 16px; padding: 24px 20px; }
+  .cta-strip .btn { justify-content: center; }
+  .meetup-hero-desc { font-size: 15px; }
+  .meetup-hero-actions .btn,
+  .meetup-connect-buttons .btn { flex: 1 1 160px; justify-content: center; }
+  .meetup-next-card { padding: 22px; }
+  .meetup-next-card-frequency { font-size: 32px; }
+  .empty { padding: 48px 20px; }
+}
+
+/* Small phones (iPhone SE / mini, 360-390px). Below this the 24px gutters and
+   the 2-up footer start to squeeze content into unreadable columns. */
+@media (max-width: 560px) {
+  .section { padding: 40px 18px; }
+  .hero-titlebar-inner { padding: 32px 18px 24px; }
+  .footer-inner { grid-template-columns: 1fr; padding: 40px 18px 20px; gap: 28px; }
+  .footer-bottom {
+    padding: 18px 18px calc(20px + env(safe-area-inset-bottom));
+    flex-direction: column;
+    gap: 8px;
+  }
+  .cta-band-inner { padding: 28px 18px; gap: 20px; }
+  .cta-band-actions { width: 100%; }
+  .cta-band-actions > a { flex: 1 1 auto; justify-content: center; text-align: center; }
+  .hero-sub { font-size: 16px; }
+  .hero-eyebrow { flex-wrap: wrap; gap: 8px; margin-bottom: 18px; }
+  .map-legend { left: 12px; bottom: 12px; right: 12px; }
+  .breadcrumb { line-height: 1.7; }
+  .meetup-card-foot { flex-wrap: wrap; row-gap: 12px; }
+  .meetup-card-foot .btn { width: 100%; justify-content: center; }
+  .state-main-head { flex-direction: column; align-items: flex-start; gap: 6px; }
+  .drawer-name { font-size: 24px; }
 }
 
 /* ============ SCROLLBAR ============ */

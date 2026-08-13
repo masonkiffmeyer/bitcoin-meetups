@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { geoMercator, geoPath, geoBounds } from "d3-geo";
-import { feature } from "topojson-client";
+import { loadStatesGeo } from "@/lib/us-atlas";
 import type { Meetup } from "@/lib/types";
 
 const W = 400;
@@ -21,16 +21,6 @@ const STATE_CODE_TO_FIPS: Record<string, string> = {
   WI: "55", WY: "56",
 };
 
-let _cached: any | null = null;
-async function loadStates() {
-  if (_cached) return _cached;
-  const us = await fetch("https://cdn.jsdelivr.net/npm/us-atlas@3/states-10m.json").then((r) =>
-    r.json()
-  );
-  _cached = feature(us as any, (us as any).objects.states) as any;
-  return _cached;
-}
-
 type Props = {
   stateAbbr: string;
   meetups: Meetup[];
@@ -45,7 +35,7 @@ export default function StateOutlineMap({ stateAbbr, meetups }: Props) {
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const states = await loadStates();
+      const states = await loadStatesGeo().catch(() => null);
       if (!states || cancelled) return;
       const fips = STATE_CODE_TO_FIPS[stateAbbr];
       const stateFeature = states.features.find(
