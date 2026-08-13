@@ -6,21 +6,35 @@ import type { Meetup } from "@/lib/types";
 // This file is a transcription of the master meetups spreadsheet
 // (Meetups_Database__merged_meetups_final), which itself merges BTC Map,
 // bitcoin-only.com/meetups, and the earlier hand-built entries on this site.
-// The spreadsheet is the source of truth for name, city, state, website,
-// Meetup URL, X handle, cadence and venue — re-import rather than editing
-// those fields here, so the two don't drift apart.
+// The spreadsheet is the source of truth for name, state, website, Meetup URL,
+// X handle, cadence and venue — re-import rather than editing those fields
+// here, so the two don't drift apart.
 //
-// Three deliberate departures from the spreadsheet, all made because the raw
-// value would break a URL or mislabel a field:
+// CITY IS THE ONE FIELD WE OVERRIDE. The sheet inherits BTC Map pin locations,
+// which often name the suburb the pin sits in rather than the metro a visitor
+// would search for. Ten groups are filed under their metro instead: Bay Area
+// Bitcoiners (sheet says Tiburon), SD Bitcoiners (San Diego Country Estates),
+// DTX Bitcoiners (Fort Worth), San Antonio Bitcoin Club (Balcones Heights),
+// BitPlebs LA (La Crescenta-Montrose), Bitcoin and Beer Denver + Denver
+// BitDevs (Aurora), BTC Lincoln Land (Southern View), Michigan Bitcoin
+// (Berrien Springs) and Chattanooga Bitcoin (East Chattanooga).
+//
+// Other entries still carry a suburb from the sheet where the group's own name
+// suggests a metro — Ann Arbor Bitcoin is filed under Dexter, SLC-BTC under
+// Taylorsville, Nola Bitcoin under Chalmette, Albany Bitcoin Group under
+// Voorheesville, Columbia SC Bitcoin under Woodfield. Left alone pending
+// confirmation of where each actually meets.
+//
+// Two further departures, both because the raw cell would break a URL:
 //   - Bitcoin District DC is filed under state "District of Columbia" with
 //     city "Washington". The sheet puts "Washington, D.C." in both columns,
 //     which would slug to a comma-laden route.
 //   - Bitcoin101 is filed under city "Lansing" with "Lansing / Ovid area" as
 //     its venue. A slash inside a city name splits the URL path segment.
-//   - Cincinnati Bitcoin's Telegram invite sits in `telegram`, not `website`,
-//     so the detail page labels the link correctly.
-// Juneau BTC's X Handle cell holds an email address rather than a handle, so
-// it is not carried over; there is no email field on the Meetup type.
+// Cincinnati Bitcoin's Telegram invite sits in `telegram` rather than
+// `website`, so the detail page labels the link correctly. Juneau BTC's X
+// Handle cell holds an email address, so it is not carried over; there is no
+// email field on the Meetup type.
 //
 // Coordinates are city centers, not venue addresses, except for the four
 // entries with a documented fixed address (PubKey, Bitcoin Park, Bitcoin
@@ -172,11 +186,11 @@ export const meetups: Meetup[] = [
     id: "bitplebs-la",
     slug: "bitplebs-la",
     name: "BitPlebs LA",
-    city: "La Crescenta-Montrose",
+    city: "Los Angeles",
     state: "California",
     stateAbbr: "CA",
-    lat: 34.2364,
-    lng: -118.2353,
+    lat: 34.0522,
+    lng: -118.2437,
     cadence: "Monthly",
     venue: "Rotating LA venues",
     description: "Casual bitcoin meetup for the LA pleb community. Less technical than BitDevs.",
@@ -268,11 +282,11 @@ export const meetups: Meetup[] = [
     id: "sd-bitcoiners",
     slug: "sd-bitcoiners",
     name: "SD Bitcoiners",
-    city: "San Diego Country Estates",
+    city: "San Diego",
     state: "California",
     stateAbbr: "CA",
-    lat: 33.0089,
-    lng: -116.7828,
+    lat: 32.7157,
+    lng: -117.1611,
     cadence: "Monthly",
     venue: "Rotating San Diego venues",
     description: "San Diego bitcoin community.",
@@ -287,11 +301,11 @@ export const meetups: Meetup[] = [
     id: "bay-area-bitcoiners",
     slug: "bay-area-bitcoiners",
     name: "Bay Area Bitcoiners",
-    city: "Tiburon",
+    city: "San Francisco",
     state: "California",
     stateAbbr: "CA",
-    lat: 37.8735,
-    lng: -122.4566,
+    lat: 37.7749,
+    lng: -122.4194,
     cadence: "Monthly",
     venue: "Rotating Bay Area venues",
     description: "SF Bay Area bitcoin community. Mix of builders, investors, and engineers.",
@@ -325,11 +339,11 @@ export const meetups: Meetup[] = [
     id: "denver-bitcoin-beer",
     slug: "denver-bitcoin-beer",
     name: "Bitcoin and Beer Denver",
-    city: "Aurora",
+    city: "Denver",
     state: "Colorado",
     stateAbbr: "CO",
-    lat: 39.7294,
-    lng: -104.8319,
+    lat: 39.7392,
+    lng: -104.9903,
     cadence: "Monthly",
     venue: "Rotating local breweries",
     description: "Mountain bitcoiners gathering over beer. Casual, bitcoin-focused.",
@@ -344,14 +358,14 @@ export const meetups: Meetup[] = [
     id: "denver-bitdevs",
     slug: "denver-bitdevs",
     name: "Denver BitDevs",
-    city: "Aurora",
+    city: "Denver",
     state: "Colorado",
     stateAbbr: "CO",
-    lat: 39.7294,
-    lng: -104.8319,
+    lat: 39.7392,
+    lng: -104.9903,
     cadence: "Schedule not confirmed",
     venue: "Venue not confirmed",
-    description: "Bitcoin meetup serving the Aurora, CO area.",
+    description: "Bitcoin meetup serving the Denver, CO area.",
     attendance: "Not reported",
     beginnerFriendly: false,
     meetupUrl: "https://www.meetup.com/denver-bitdevs/",
@@ -767,11 +781,11 @@ export const meetups: Meetup[] = [
     id: "btc-lincoln-land",
     slug: "btc-lincoln-land",
     name: "BTC Lincoln Land",
-    city: "Southern View",
+    city: "Springfield",
     state: "Illinois",
     stateAbbr: "IL",
-    lat: 39.7723,
-    lng: -89.6537,
+    lat: 39.7817,
+    lng: -89.6501,
     cadence: "Monthly",
     venue: "Central Illinois",
     description: "Central Illinois bitcoin community.",
@@ -952,11 +966,11 @@ export const meetups: Meetup[] = [
     id: "michigan-bitcoin",
     slug: "michigan-bitcoin",
     name: "Michigan Bitcoin",
-    city: "Berrien Springs",
+    city: "Benton Harbor",
     state: "Michigan",
     stateAbbr: "MI",
-    lat: 41.9467,
-    lng: -86.3403,
+    lat: 42.1167,
+    lng: -86.4542,
     cadence: "Monthly",
     venue: "Benton Harbor / St. Joseph area",
     description: "Southwest Michigan bitcoin meetup.",
@@ -1765,11 +1779,11 @@ export const meetups: Meetup[] = [
     id: "chattanooga-bitcoin",
     slug: "chattanooga-bitcoin",
     name: "Chattanooga Bitcoin",
-    city: "East Chattanooga",
+    city: "Chattanooga",
     state: "Tennessee",
     stateAbbr: "TN",
-    lat: 35.067,
-    lng: -85.276,
+    lat: 35.0456,
+    lng: -85.3097,
     cadence: "Monthly",
     venue: "Chattanooga area",
     description: "Southeast Tennessee bitcoin community.",
@@ -1881,11 +1895,11 @@ export const meetups: Meetup[] = [
     id: "sa-bitcoin-club",
     slug: "sa-bitcoin-club",
     name: "San Antonio Bitcoin Club",
-    city: "Balcones Heights",
+    city: "San Antonio",
     state: "Texas",
     stateAbbr: "TX",
-    lat: 29.4855,
-    lng: -98.5464,
+    lat: 29.4241,
+    lng: -98.4936,
     cadence: "Monthly",
     venue: "San Antonio area",
     description: "South Texas bitcoin community.",
@@ -1937,11 +1951,11 @@ export const meetups: Meetup[] = [
     id: "dtx-bitcoiners",
     slug: "dtx-bitcoiners",
     name: "DTX Bitcoiners (Dallas-Fort Worth)",
-    city: "Fort Worth",
+    city: "Dallas",
     state: "Texas",
     stateAbbr: "TX",
-    lat: 32.7555,
-    lng: -97.3308,
+    lat: 32.7767,
+    lng: -96.797,
     cadence: "Monthly",
     venue: "DFW metroplex",
     description: "Dallas-Fort Worth bitcoin community.",

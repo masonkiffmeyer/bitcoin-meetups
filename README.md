@@ -106,14 +106,21 @@ Two things to know about the transcription:
 
 - **Coordinates are city centers, not venues** (except PubKey, Bitcoin Park,
   Bitcoin Commons and Georgetown Bitcoin, which have documented addresses).
-- **Cities come from the spreadsheet, which mostly reflects BTC Map pin
-  locations.** Several read as a suburb rather than the metro people would
-  search for — Bay Area Bitcoiners is filed under Tiburon, SD Bitcoiners under
-  San Diego Country Estates, DTX Bitcoiners under Fort Worth. Correct these in
-  the spreadsheet first, then re-import, so the two don't drift apart.
+- **City is the one field the site overrides.** The sheet inherits BTC Map pin
+  locations, which often name the suburb the pin sits in rather than the metro
+  a visitor would search for. Ten groups are filed under their metro here — Bay
+  Area Bitcoiners under San Francisco rather than Tiburon, SD Bitcoiners under
+  San Diego rather than San Diego Country Estates, and so on. **Push these back
+  into the spreadsheet** so the two stop disagreeing.
 
-The header comment in `data/meetups.ts` lists the handful of places where the
-raw spreadsheet value had to be adjusted to keep URLs valid.
+A handful of others still carry a suburb from the sheet even though the group's
+own name suggests a metro — Ann Arbor Bitcoin under Dexter, SLC-BTC under
+Taylorsville, Nola Bitcoin under Chalmette, Albany Bitcoin Group under
+Voorheesville, Columbia SC Bitcoin under Woodfield. Left as-is pending
+confirmation of where each actually meets; worth resolving during verification.
+
+The header comment in `data/meetups.ts` lists every override in full, plus the
+places where a raw spreadsheet value had to be adjusted to keep URLs valid.
 
 Unverified meetups display a "Listing unverified" badge on their detail page so
 it's honest with visitors during the soft-launch phase. Once you verify an
