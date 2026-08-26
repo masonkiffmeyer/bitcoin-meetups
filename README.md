@@ -39,8 +39,7 @@ app/
 ├── layout.tsx                            # Root layout with SiteNav + SiteFooter
 ├── globals.css                           # Design tokens + every component class
 ├── not-found.tsx                         # 404 (.empty card)
-├── submit/page.tsx                       # Submission form
-├── api/submit/route.ts                   # POST endpoint for submissions
+├── submit/page.tsx                       # Links out to the Google Form
 ├── [state]/page.tsx                      # State hub
 ├── [state]/[city]/page.tsx               # City hub
 └── [state]/[city]/[slug]/page.tsx        # Individual meetup detail
@@ -68,9 +67,8 @@ lib/
 /[state]                           State hub  (e.g. /texas)
 /[state]/[city]                    City hub   (e.g. /texas/austin)
 /[state]/[city]/[slug]             Meetup     (e.g. /texas/austin/bitcoin-commons-austin)
-/submit                            Submission form
-/submit?update=[slug]              Update a listing
-/api/submit                        POST endpoint
+/submit                            Google Form hand-off
+/submit?update=[slug]              Update a listing (same form, different copy)
 ```
 
 City slugs strip periods so `St. Louis` becomes `st-louis`. Slug helpers live in `data/meetups.ts` (`stateSlug`, `citySlug`, `getMeetupByPath`, `getCitiesInState`, `getMeetupsByCityInState`).
@@ -138,9 +136,8 @@ Things not yet built, in recommended priority order:
 
 1. **Verify the seed data.** Go through all 112 unverified meetups. Remove dead ones, correct bad info, confirm with real sources.
 2. **Add more meetups.** Target 150-300 for a credible public launch. The AI-assisted city sweep approach is documented in the BIB proposal PDF.
-3. **Email submission notifications.** The `/api/submit` route currently only writes to a JSON file. Wire it to send an email to Mason when a new submission arrives (SendGrid, Resend, or Sender.net).
-4. **Postgres migration.** Replace `data/submissions.json` with a real database on Railway once submission volume grows.
-5. **Admin review UI.** Build a simple `/admin` page protected by basic auth that lets you approve/reject pending submissions and merge them into `meetups.ts`.
+3. **Submission notifications.** Organizer submissions arrive through the Google Form. Turn on form notifications (or a Sheets trigger) so Mason is emailed when a new response lands.
+4. **Admin review flow.** Review responses in the linked Google Sheet and merge approved ones into `meetups.ts`. A richer `/admin` UI would need a server runtime, which this static export no longer has.
 6. **Organic event feed.** Pull bitcoin calendar events from Nostr (NIP-52) and show upcoming events on meetup detail pages.
 7. **Sitemap and robots.txt.** For SEO. Generate dynamically from the meetup list.
 8. **OG images.** Per-meetup Open Graph images for nicer social sharing.
