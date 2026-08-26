@@ -68,7 +68,6 @@ lib/
 /[state]/[city]                    City hub   (e.g. /texas/austin)
 /[state]/[city]/[slug]             Meetup     (e.g. /texas/austin/bitcoin-commons-austin)
 /submit                            Google Form hand-off
-/submit?update=[slug]              Update a listing (same form, different copy)
 ```
 
 City slugs strip periods so `St. Louis` becomes `st-louis`. Slug helpers live in `data/meetups.ts` (`stateSlug`, `citySlug`, `getMeetupByPath`, `getCitiesInState`, `getMeetupsByCityInState`).

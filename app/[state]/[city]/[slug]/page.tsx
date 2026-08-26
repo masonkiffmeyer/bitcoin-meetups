@@ -235,7 +235,7 @@ export default async function MeetupDetailPage({ params }: Props) {
         <div className="info-card-sub">
           Claim this listing to keep it up to date and add upcoming event details.
         </div>
-        <Link href={`/submit?update=${meetup.slug}`} className="info-card-link">
+        <Link href="/submit" className="info-card-link">
           Claim or update this listing →
         </Link>
       </div>
