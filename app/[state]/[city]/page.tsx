@@ -8,7 +8,7 @@ import {
   stateSlug,
   citySlug,
   getFreq,
-} from "@/data/meetups";
+} from "@/lib/meetups";
 import CityPinMap from "@/components/CityPinMap";
 
 type Props = { params: Promise<{ state: string; city: string }> };

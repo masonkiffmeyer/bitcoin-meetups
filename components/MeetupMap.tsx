@@ -5,7 +5,7 @@ import Link from "next/link";
 import { geoAlbersUsa, geoPath } from "d3-geo";
 import { loadStatesGeo } from "@/lib/us-atlas";
 import type { Meetup } from "@/lib/types";
-import { getFreq, stateSlug, citySlug } from "@/data/meetups";
+import { getFreq, stateSlug, citySlug } from "@/lib/meetups";
 
 type StatePath = { id: string; name: string; d: string };
 type Projection = (point: [number, number]) => [number, number] | null;

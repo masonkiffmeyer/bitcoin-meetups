@@ -5,7 +5,7 @@ import {
   getAllStatesWithMeetups,
   getMeetupsByStateSlug,
   getFreq,
-} from "@/data/meetups";
+} from "@/lib/meetups";
 import StateOutlineMap from "@/components/StateOutlineMap";
 import StateDirectoryClient from "@/components/StateDirectoryClient";
 

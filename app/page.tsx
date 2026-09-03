@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { meetups, getFreq } from "@/data/meetups";
+import { meetups, getFreq } from "@/lib/meetups";
 import MeetupMapWrapper from "@/components/MeetupMapWrapper";
 import IndexDirectory from "@/components/IndexDirectory";
 import MeetupDrawer from "@/components/MeetupDrawer";

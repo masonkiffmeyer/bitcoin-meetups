@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import type { Meetup } from "@/lib/types";
-import { getFreq, citySlug } from "@/data/meetups";
+import { getFreq, citySlug } from "@/lib/meetups";
 
 type Cadence = "weekly" | "monthly";
 

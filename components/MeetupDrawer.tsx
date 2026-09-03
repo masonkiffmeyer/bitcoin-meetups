@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import Link from "next/link";
 import type { Meetup } from "@/lib/types";
-import { getFreq, stateSlug, citySlug } from "@/data/meetups";
+import { getFreq, stateSlug, citySlug } from "@/lib/meetups";
 
 type Props = {
   meetup: Meetup | null;
