@@ -29,7 +29,7 @@ import { parseCsv, findHeaderRow } from "./csv-utils.mjs";
 // Override without editing this file by setting MEETUPS_SHEET_CSV_URL.
 const SHEET_CSV_URL =
   process.env.MEETUPS_SHEET_CSV_URL ||
-  "https://docs.google.com/spreadsheets/d/1fO166Jn-rsPoesHvG1elfc4OkGFXlgxHszrxefkmepM/export?format=csv&gid=318768783";
+  "https://docs.google.com/spreadsheets/d/e/2PACX-1vTUtu9yzISkH-eL9aLqIAbOIOMtz18IHbVozqq-M_MK9lROkQoTF3R72wQEAQBVXdEa0TnFOH1FcS1i/pub?gid=318768783&single=true&output=csv";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const OUTPUT_PATH = path.join(ROOT, "data", "meetups.json");
